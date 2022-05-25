@@ -110,6 +110,22 @@ package Types
 	FireSpirit:     "FireSpirit"
 	StormSpirit:    "StormSpirit"
 	WaterSpirit:    "WaterSpirit"
+	FireSerpent:    "FireSerpent"
+	ThorsHammer:    "ThorsHammer"
+	EnergySphere:   "EnergySphere"
+	ChaoticFlux:    "ChaoticFlux"
+	WindOfAmnesia:  "WindOfAmnesia"
+	MassAttack:     "MassAttack"
+	ChantOfLife:    "ChantOfLife"
+	ChantOfEnhance: "ChantOfEnhance"
+	PoisonCloud:    "PoisonCloud"
+	Levitate:       "Levitate"
+	SpectralAura:   "SpectralAura"
+	UndeadBane:     "UndeadBane"
+	GoliathMutate:  "GoliathMutate"
+	Invocation:     "Invocation"
+	Possession:     "Possession"
+	Decoy:          "Decoy"
 }
 #SpellEntry: or(
 		[

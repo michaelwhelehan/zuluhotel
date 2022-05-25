@@ -51,6 +51,7 @@ namespace ZuluContent.Zulu.Engines.Magic
     [Union(41, typeof(NightSight))]
     [Union(42, typeof(WraithForm))]
     [Union(43, typeof(DeathPardon))]
+    [Union(44, typeof(FireSerpent))]
     public interface IEnchantmentValue : IEnchantmentHook
     {
         public EnchantmentInfo Info { get; }

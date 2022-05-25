@@ -659,7 +659,7 @@ namespace Server.Items
                 bc.WeaponAbilityChance >= Utility.RandomDouble())
                 ab.OnHit(attacker, defender, ref damage);
 
-            if (attackerWeapon?.EffectHitType != EffectHitType.Piercing && damage < 2)
+            if (defender is BaseCreature { PhysicalImmune: true } || attackerWeapon?.EffectHitType != EffectHitType.Piercing && damage < 2)
                 damage = 2;
 
             CheckApplyPoison(attacker, defender);

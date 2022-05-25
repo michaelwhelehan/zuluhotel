@@ -18,7 +18,7 @@ namespace Scripts.Zulu.Packets
 {
     public static class OutgoingZuluPackets
     {
-        private const int ZuluPlayerStatusMaxLength = 38;
+        private const int ZuluPlayerStatusMaxLength = 36; // 38;
         private const int JsGumpOpenMaxLength = 10 * 1024; // 10KB, theoretically could be up to < 64KB 
         private const string ZuluClientSuffix = "zuluhotel";
 
@@ -73,7 +73,7 @@ namespace Scripts.Zulu.Packets
 
             var writer = new SpanWriter(stackalloc byte[ZuluPlayerStatusMaxLength]);
             writer.Write((byte)0xF9); // Packet ID
-            writer.Seek(2, SeekOrigin.Current);
+            // writer.Seek(2, SeekOrigin.Current);
             writer.Write((byte)0x1); // Sub-command PlayerStatus
             writer.Write(player.Serial);
             writer.Write((short)player.Hunger);

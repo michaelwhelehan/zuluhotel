@@ -159,11 +159,14 @@ namespace Scripts.Zulu.Engines.Classes
             if (points == 0)
                 return;
 
-            points = (int) (points * GetSkillPointsMultiplier(from as Mobile, skillName));
+            points = (int) (points * GetSkillPointsMultiplier(from, skillName));
 
-            // TODO: Should we implement global multipliers?
+            if (from is PlayerMobile { IsInPowerHour: true })
+            {
+                points *= 3;
+            }
 
-            AwardPoints(from as Mobile, skillName, points);
+            AwardPoints(from, skillName, points);
         }
 
         public static double GetSkillPointsMultiplier(Mobile from, SkillName skillName)
