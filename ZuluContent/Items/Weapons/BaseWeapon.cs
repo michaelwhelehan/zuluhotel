@@ -862,7 +862,7 @@ namespace Server.Items
                 var armorRating = armor?.ArmorRating ?? 0 + defender.VirtualArmor + defender.VirtualArmorMod;
 
                 rawDamage = ShieldAbsorbDamage(attacker, defender, baseDamage);
-                rawDamage -= armorRating * (Utility.Random(51) + 50) * 0.01;
+                rawDamage -= armorRating * (Utility.RandomMinMax(1, 50) + 50) * 0.01;
             }
             else
             {

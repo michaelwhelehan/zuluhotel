@@ -56,6 +56,9 @@ namespace Server.SkillHandlers
                     break;
             }
 
+            if (from is IZuluClassed { ZuluClass: { Type: ZuluClassType.Mage, Level: >= 5 } })
+                return TimeSpan.Zero;
+            
             return ZhConfig.Skills.Entries[SkillName.ItemID].Delay;
         }
     }
