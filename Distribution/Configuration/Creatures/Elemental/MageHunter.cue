@@ -25,7 +25,6 @@ MageHunter: {
 		Tactics:      130
 		Wrestling:    150
 		MagicResist:  160
-		Magery:       160
 		DetectHidden: 130
 	}
 	Attack: {
