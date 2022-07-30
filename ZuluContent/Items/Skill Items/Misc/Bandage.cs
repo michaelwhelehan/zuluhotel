@@ -362,8 +362,8 @@ namespace Server.Items
                         toHeal = 1;
                         healerNumber = 500968; // You apply the bandages, but they barely help.
                     }
-                    
-                    Healer.SendSuccessMessage($"You healed {toHeal} damage.");
+
+                    Healer.SendSuccessMessage($"You healed {(int)toHeal} damage.");
 
                     Patient.Heal((int)toHeal, Healer, false);
                 }
