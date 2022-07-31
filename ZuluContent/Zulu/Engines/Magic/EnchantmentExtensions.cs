@@ -107,7 +107,7 @@ namespace ZuluContent.Zulu.Engines.Magic
             ElementalProtectionLevel level) =>
             enchanted.TrySetResist(type,
                 (type == ElementalType.Poison || type == ElementalType.MagicImmunity ||
-                 type == ElementalType.MagicReflection)
+                 type == ElementalType.MagicReflection || type == ElementalType.Paralysis)
                     ? (int) level
                     : IElementalResistible.GetResistForProtectionLevel(level));
 
