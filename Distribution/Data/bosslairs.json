@@ -1,0 +1,9 @@
+[
+  {
+    "type": "BossLair",
+    "name": "Count Dracula's Lair",
+    "map": "Felucca",
+    "bounds": [5566, 1847, 25, 25],
+    "mounts": false
+  }
+]

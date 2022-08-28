@@ -451,8 +451,9 @@ namespace Server.Mobiles
 
         public virtual bool IsInvulnerable
         {
-            get { return false; }
-        }
+            get;
+            set;
+        } = false;
 
         public BaseAI AIObject { get; private set; }
 
@@ -3993,7 +3994,7 @@ namespace Server.Mobiles
                 if (target != null && target.Alive && CanBeHarmful(target) && target.Map == Map &&
                     InLOS(target) && !BardPacified && !target.Paralyzed)
                 {
-                    if (Core.TickCount - m_NextSpitWebTime < (int)TimeSpan.FromSeconds(30).TotalMilliseconds && Utility.RandomBool())
+                    if (Core.TickCount - m_NextSpitWebTime < (int)TimeSpan.FromSeconds(15).TotalMilliseconds && Utility.RandomBool())
                     {
                         SpitWeb(target);
                     }

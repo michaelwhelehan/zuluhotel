@@ -3856,10 +3856,10 @@ Spells: {
             Amount:  1
         }]
     }
-    Decoy: {
-        Type:             "DecoySpell"
-        Name:             "Decoy"
-        Mantra:           "Vas Jux Hur Ylem"
+    MagicRune: {
+        Type:             "MagicRuneSpell"
+        Name:             "Magic Rune"
+        Mantra:           "Vas Ort Mani"
         Circle:           "Higher 2nd Circle of Forgotten spells"
         DamageType:       "None"
         RightHandEffect:  9002

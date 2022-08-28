@@ -3,6 +3,7 @@ package Human
 SparringPartner: {
 	Name:               "<random> the Sparring Partner"
 	CorpseNameOverride: "corpse of <random> the Sparring Partner"
+	BaseType:           "BaseSparringPartner"
 	Str:                25
 	Int:                10
 	Dex:                10

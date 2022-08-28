@@ -660,6 +660,8 @@ namespace Server.Items
 
             if (defender is BaseCreature { PhysicalImmune: true } || attackerWeapon?.EffectHitType != EffectHitType.Piercing && damage < 2)
                 damage = 2;
+            else if (attacker is BaseSparringPartner || defender is BaseSparringPartner)
+                damage = 0;
 
             CheckApplyPoison(attacker, defender);
 

@@ -135,6 +135,6 @@ namespace Server.Spells
         GoliathMutate = 712,
         Invocation = 713,
         Possession = 714,
-        Decoy = 715
+        MagicRune = 715
     }
 }

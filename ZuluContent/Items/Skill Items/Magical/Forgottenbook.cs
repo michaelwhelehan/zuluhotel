@@ -21,7 +21,7 @@ namespace Server.Items
             { SpellEntry.ChantOfLife, 23022 }, { SpellEntry.ChantOfEnhance, 23023 }, { SpellEntry.PoisonCloud, 23024 },
             { SpellEntry.Levitate, 23025 }, { SpellEntry.SpectralAura, 23026 }, { SpellEntry.UndeadBane, 23027 },
             { SpellEntry.GoliathMutate, 23028 }, { SpellEntry.Invocation, 23029 }, { SpellEntry.Possession, 23030 },
-            { SpellEntry.Decoy, 23031 }
+            { SpellEntry.MagicRune, 23031 }
         };
         
         public override Type SpellType { get; } = typeof(ForgottenSpell);

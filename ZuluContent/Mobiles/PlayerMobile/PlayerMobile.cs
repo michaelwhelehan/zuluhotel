@@ -121,6 +121,9 @@ namespace Server.Mobiles
         
         [CommandProperty(AccessLevel.GameMaster)]
         public DateTime LastPowerHourUsed { get; set; }
+        
+        [CommandProperty(AccessLevel.GameMaster)]
+        public BaseMount InternalizedMount { get; set; }
 
         [CommandProperty(AccessLevel.GameMaster)]
         public long LastMoved
@@ -1156,8 +1159,8 @@ namespace Server.Mobiles
 
             DropHolding();
 
-            //SendMessage("YOU DIED!");
-            //return false;
+            /*SendMessage("YOU DIED!");
+            return false;*/
             
             return base.OnBeforeDeath();
         }
@@ -1360,6 +1363,11 @@ namespace Server.Mobiles
 
             switch (version)
             {
+                case 34:
+                {
+                    InternalizedMount = reader.ReadEntity<BaseMount>();
+                    goto case 33;
+                }
                 case 33:
                 {
                     LastPowerHourUsed = reader.ReadDateTime();
@@ -1543,8 +1551,10 @@ namespace Server.Mobiles
 
             base.Serialize(writer);
 
-            writer.Write((int) 33); // version
+            writer.Write((int) 34); // version
             
+            writer.Write(InternalizedMount);
+
             writer.Write(LastPowerHourUsed);
             
             writer.Write(CustomSpellHotBars.Count);
@@ -1658,6 +1668,8 @@ namespace Server.Mobiles
             BaseHouse.HandleDeletion(this);
 
             DisguiseTimers.RemoveTimer(this);
+
+            InternalizedMount?.Delete();
         }
 
         public bool BedrollLogout { get; set; }
