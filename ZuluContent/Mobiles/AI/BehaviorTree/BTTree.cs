@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Server.Mobiles;
 
@@ -8,13 +9,37 @@ public abstract class BTTree
 
     private readonly Dictionary<string, object> m_DataContext = new();
 
-    public void Start()
+    private readonly Queue<BTNode> m_CurrentProcessingNodes = new();
+
+    public void Init()
     {
         m_Root = SetupTree();
     }
 
     public NodeState Update()
     {
+        /*try
+        {
+            var currentProcessingNode = PeekProcessingNode();
+            if (currentProcessingNode != null)
+            {
+                var state = currentProcessingNode.Evaluate();
+                if (state != NodeState.RUNNING)
+                {
+                    DequeueProcessingNode();
+                }
+
+                return state;
+            }
+            
+            return m_Root.Evaluate();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return NodeState.FAILURE;
+        }*/
+        
         return m_Root.Evaluate();
     }
 
@@ -36,5 +61,22 @@ public abstract class BTTree
         if (!m_DataContext.ContainsKey(key)) return false;
         m_DataContext.Remove(key);
         return true;
+    }
+
+    public void QueueProcessingNode(BTNode node)
+    {
+        m_CurrentProcessingNodes.Enqueue(node);
+    }
+    
+    public BTNode DequeueProcessingNode()
+    {
+        return m_CurrentProcessingNodes.Dequeue();
+    }
+    
+    public BTNode PeekProcessingNode()
+    {
+        m_CurrentProcessingNodes.TryPeek(out var value);
+
+        return value;
     }
 }

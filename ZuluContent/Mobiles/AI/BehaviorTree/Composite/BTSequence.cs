@@ -14,25 +14,23 @@ public class BTSequence : BTNode
 
     public override NodeState Evaluate()
     {
-        var anyChildIsRunning = false;
-
         foreach (var node in Children)
             switch (node.Evaluate())
             {
+                case NodeState.SUCCESS:
+                    continue;
                 case NodeState.FAILURE:
                     State = NodeState.FAILURE;
                     return State;
-                case NodeState.SUCCESS:
-                    continue;
                 case NodeState.RUNNING:
-                    anyChildIsRunning = true;
-                    continue;
+                    State = NodeState.RUNNING;
+                    return State;
                 default:
                     State = NodeState.SUCCESS;
                     return State;
             }
 
-        State = anyChildIsRunning ? NodeState.RUNNING : NodeState.SUCCESS;
+        State = NodeState.SUCCESS;
         return State;
     }
 }

@@ -16,7 +16,7 @@ public class DoBardPacified : BTNode
             m_Mobile.DebugSay("I am pacified, I wait");
             m_Mobile.Combatant = null;
             m_Mobile.Warmode = false;
-
+            
             State = NodeState.RUNNING;
             return State;
         }
@@ -24,7 +24,7 @@ public class DoBardPacified : BTNode
         m_Mobile.DebugSay("I'm not pacified any longer");
         m_Mobile.BardPacified = false;
 
-        State = NodeState.SUCCESS;
+        State = NodeState.FAILURE;
         return State;
     }
 }

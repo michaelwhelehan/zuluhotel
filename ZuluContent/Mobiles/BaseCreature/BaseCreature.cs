@@ -456,6 +456,8 @@ namespace Server.Mobiles
         } = false;
 
         public BaseAI AIObject { get; private set; }
+        
+        public BaseBTAI BTAIObject { get; private set; }
 
         public const int MaxOwners = 5;
         
@@ -1512,6 +1514,7 @@ namespace Server.Mobiles
         public void ChangeAIType(AIType newAi)
         {
             AIObject?.m_Timer.Stop();
+            BTAIObject?.StopTimer();
 
             if (ForcedAI != null)
             {
@@ -1519,9 +1522,15 @@ namespace Server.Mobiles
                 return;
             }
 
+            if (newAi == AIType.AI_Melee)
+            {
+                BTAIObject = new BaseBTAI(this, new MeleeBT(this));
+                return;
+            }
+
             AIObject = newAi switch
             {
-                AIType.AI_Melee => new MeleeAI(this),
+                // AIType.AI_Melee => new MeleeAI(this),
                 AIType.AI_Animal => new AnimalAI(this),
                 AIType.AI_Berserk => new BerserkAI(this),
                 AIType.AI_Archer => new ArcherAI(this),
@@ -1930,6 +1939,13 @@ namespace Server.Mobiles
 
                 AIObject = null;
             }
+            
+            if (BTAIObject != null)
+            {
+                BTAIObject.StopTimer();
+
+                BTAIObject = null;
+            }
 
             if (m_DeleteTimer != null)
             {
@@ -2197,6 +2213,7 @@ namespace Server.Mobiles
             OrderType ct = m_ControlOrder;
 
             AIObject?.OnAggressiveAction(aggressor);
+            BTAIObject?.OnAggressiveAction(aggressor);
 
             StopFlee();
 
@@ -2470,6 +2487,9 @@ namespace Server.Mobiles
 
             if (PlayerRangeSensitive && AIObject != null && map != null && map.GetSector(Location).Active)
                 AIObject.Activate();
+            
+            if (PlayerRangeSensitive && BTAIObject != null && map != null && map.GetSector(Location).Active)
+                BTAIObject.Activate();
         }
 
         public override void OnCombatantChange()
@@ -4284,6 +4304,7 @@ namespace Server.Mobiles
             else if (PlayerRangeSensitive)
             {
                 AIObject?.Deactivate();
+                BTAIObject?.Deactivate();
             }
 
             base.OnSectorDeactivate();
@@ -4300,6 +4321,7 @@ namespace Server.Mobiles
                     if (!Map.GetSector(X, Y).Active)
                     {
                         AIObject?.Deactivate();
+                        BTAIObject?.Deactivate();
                     }
                 }
             }
@@ -4312,6 +4334,7 @@ namespace Server.Mobiles
             if (PlayerRangeSensitive)
             {
                 AIObject?.Activate();
+                BTAIObject?.Activate();
             }
 
             base.OnSectorActivate();
