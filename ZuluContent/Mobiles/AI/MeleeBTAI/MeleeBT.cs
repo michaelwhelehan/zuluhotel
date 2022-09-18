@@ -9,7 +9,6 @@ public class MeleeBT : BTTree
     public MeleeBT(BaseCreature mobile)
     {
         m_Mobile = mobile;
-        Init();
     }
     
     public static BTNode DoCombat(BaseCreature mobile, BTTree tree)

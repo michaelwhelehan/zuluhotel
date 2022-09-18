@@ -34,7 +34,7 @@ public class BaseBTAI
 
         if (activate)
         {
-            m_Timer.Start();
+            Activate();
         }
     }
 
@@ -68,6 +68,8 @@ public class BaseBTAI
     {
         if (!m_Timer.Running)
         {
+            BehaviorTree.Init();
+            
             m_Timer.Delay = TimeSpan.Zero;
             m_Timer.Start();
         }
