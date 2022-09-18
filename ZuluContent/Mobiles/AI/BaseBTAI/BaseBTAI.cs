@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using Server.Items;
 using Server.Spells;
-using Server.Utilities;
 using MoveImpl = Server.Movement.MovementImpl;
 
 namespace Server.Mobiles;
@@ -32,10 +30,7 @@ public class BaseBTAI
         else
             activate = true;
 
-        if (activate)
-        {
-            Activate();
-        }
+        if (activate) Activate();
     }
 
     public void Deactivate()
@@ -69,17 +64,17 @@ public class BaseBTAI
         if (!m_Timer.Running)
         {
             BehaviorTree.Init();
-            
+
             m_Timer.Delay = TimeSpan.Zero;
             m_Timer.Start();
         }
     }
-    
+
     public void StopTimer()
     {
         m_Timer.Stop();
     }
-    
+
     public void OnAggressiveAction(Mobile aggressor)
     {
         var currentCombat = Mobile.Combatant;
@@ -99,7 +94,8 @@ public class BaseBTAI
         }
     }
 
-    public static bool AcquireFocusMob(BaseCreature mobile, int iRange, FightMode acqType, bool bPlayerOnly, bool bFacFriend,
+    public static bool AcquireFocusMob(BaseCreature mobile, int iRange, FightMode acqType, bool bPlayerOnly,
+        bool bFacFriend,
         bool bFacFoe)
     {
         if (mobile.Deleted)
@@ -219,7 +215,7 @@ public class BaseBTAI
 
                 if (acqType == FightMode.Aggressor || acqType == FightMode.Evil)
                 {
-                    bool bValid = IsHostile(mobile, m);
+                    var bValid = IsHostile(mobile, m);
 
                     if (acqType == FightMode.Evil && !bValid)
                     {
@@ -265,31 +261,20 @@ public class BaseBTAI
 
         return focusedMob;
     }
-    
+
     public static bool IsHostile(Mobile to, Mobile from)
     {
-        int count = Math.Max(to.Aggressors.Count, to.Aggressed.Count);
+        var count = Math.Max(to.Aggressors.Count, to.Aggressed.Count);
 
-        if (to.Combatant == from || from.Combatant == to)
-        {
-            return true;
-        }
+        if (to.Combatant == from || from.Combatant == to) return true;
 
         if (count > 0)
-        {
-            for (int a = 0; a < count; ++a)
+            for (var a = 0; a < count; ++a)
             {
-                if (a < to.Aggressed.Count && to.Aggressed[a].Attacker == from)
-                {
-                    return true;
-                }
+                if (a < to.Aggressed.Count && to.Aggressed[a].Attacker == from) return true;
 
-                if (a < to.Aggressors.Count && to.Aggressors[a].Defender == from)
-                {
-                    return true;
-                }
+                if (a < to.Aggressors.Count && to.Aggressors[a].Defender == from) return true;
             }
-        }
 
         return false;
     }
@@ -298,43 +283,36 @@ public class BaseBTAI
     {
         mobile.Say($"*{mobile.Name} springs out from hiding!*");
     }
-    
+
     private static readonly Queue<Item> Obstacles = new();
 
-    public static bool CheckMove(long nextMove) => Core.TickCount - nextMove >= 0;
+    public static bool CheckMove(long nextMove)
+    {
+        return Core.TickCount - nextMove >= 0;
+    }
 
     public static double TransformMoveDelay(BaseCreature mobile, double delay)
     {
-        if (mobile is { Controlled: false, Summoned: false } && Math.Abs(delay - mobile.PassiveSpeed) < 0.0001)
-        {
-            delay *= 3;
-        }
-        
+        if (mobile is { Controlled: false, Summoned: false } &&
+            Math.Abs(delay - mobile.PassiveSpeed) < 0.0001) delay *= 3;
+
         var stats = mobile.Hits;
         var statsMax = mobile.HitsMax;
 
         var offset = statsMax <= 0 ? 1.0 : Math.Max(0, stats) / (double)statsMax;
 
-        if (offset < 1.0)
-        {
-            delay += mobile.PassiveSpeed * (1.0 - offset);
-        }
+        if (offset < 1.0) delay += mobile.PassiveSpeed * (1.0 - offset);
 
         return delay;
     }
-    
+
     public static MoveResult DoMoveImpl(BaseCreature mobile, Direction d, ref long nextMove)
     {
         if (mobile.Deleted || mobile.Frozen || mobile.Paralyzed ||
             mobile.Spell?.IsCasting == true || mobile.DisallowAllMoves)
-        {
             return MoveResult.BadState;
-        }
 
-        if (!CheckMove(nextMove))
-        {
-            return MoveResult.BadState;
-        }
+        if (!CheckMove(nextMove)) return MoveResult.BadState;
 
         // This makes them always move one step, never any direction changes
         // TODO: This is firing off deltas which aren't needed. Look into replacing/removing this
@@ -343,10 +321,7 @@ public class BaseBTAI
         var delay = (int)(TransformMoveDelay(mobile, mobile.CurrentSpeed) * 1000);
         nextMove += delay;
 
-        if (Core.TickCount - nextMove > 0)
-        {
-            nextMove = Core.TickCount;
-        }
+        if (Core.TickCount - nextMove > 0) nextMove = Core.TickCount;
 
         mobile.Pushing = false;
 
@@ -375,10 +350,7 @@ public class BaseBTAI
 
         if (canOpenDoors || canDestroyObstacles)
         {
-            if (mobile.Debug)
-            {
-                mobile.DebugSay("My movement was blocked, I will try to clear some obstacles.");
-            }
+            if (mobile.Debug) mobile.DebugSay("My movement was blocked, I will try to clear some obstacles.");
 
             var map = mobile.Map;
 
@@ -392,49 +364,29 @@ public class BaseBTAI
                 var eable = map.GetItemsInRange(new Point3D(x, y, mobile.Location.Z), 1);
 
                 foreach (var item in eable)
-                {
                     if (canOpenDoors && item is BaseDoor door && door.Z + door.ItemData.Height > mobile.Z &&
                         mobile.Z + 16 > door.Z)
                     {
-                        if (door.X != x || door.Y != y)
-                        {
-                            continue;
-                        }
+                        if (door.X != x || door.Y != y) continue;
 
-                        if (!door.Locked || !door.UseLocks())
-                        {
-                            Obstacles.Enqueue(door);
-                        }
+                        if (!door.Locked || !door.UseLocks()) Obstacles.Enqueue(door);
 
-                        if (!canDestroyObstacles)
-                        {
-                            break;
-                        }
+                        if (!canDestroyObstacles) break;
                     }
                     else if (canDestroyObstacles && item.Movable && item.ItemData.Impassable &&
                              item.Z + item.ItemData.Height > mobile.Z && mobile.Z + 16 > item.Z)
                     {
-                        if (!mobile.InRange(item.GetWorldLocation(), 1))
-                        {
-                            continue;
-                        }
+                        if (!mobile.InRange(item.GetWorldLocation(), 1)) continue;
 
                         Obstacles.Enqueue(item);
                         ++destroyables;
                     }
-                }
 
                 eable.Free();
 
-                if (destroyables > 0)
-                {
-                    Effects.PlaySound(new Point3D(x, y, mobile.Z), mobile.Map, 0x3B3);
-                }
+                if (destroyables > 0) Effects.PlaySound(new Point3D(x, y, mobile.Z), mobile.Map, 0x3B3);
 
-                if (Obstacles.Count > 0)
-                {
-                    blocked = false; // retry movement
-                }
+                if (Obstacles.Count > 0) blocked = false; // retry movement
 
                 while (Obstacles.Count > 0)
                 {
@@ -443,27 +395,20 @@ public class BaseBTAI
                     if (item is BaseDoor door)
                     {
                         if (mobile.Debug)
-                        {
                             mobile.DebugSay(
                                 "Little do they expect, I've learned how to open doors. Didn't they read the script??"
                             );
-                        }
 
-                        if (mobile.Debug)
-                        {
-                            mobile.DebugSay("*twist*");
-                        }
+                        if (mobile.Debug) mobile.DebugSay("*twist*");
 
                         door.Use(mobile);
                     }
                     else
                     {
                         if (mobile.Debug)
-                        {
                             mobile.DebugSay(
                                 $"Ugabooga. I'm so big and tough I can destroy it: {item.GetType().Name}"
                             );
-                        }
 
                         if (item is Container cont)
                         {
@@ -473,9 +418,7 @@ public class BaseBTAI
 
                                 if (check.Movable && check.ItemData.Impassable &&
                                     cont.Z + check.ItemData.Height > mobile.Z)
-                                {
                                     Obstacles.Enqueue(check);
-                                }
                             }
 
                             cont.Destroy();
@@ -487,10 +430,7 @@ public class BaseBTAI
                     }
                 }
 
-                if (!blocked)
-                {
-                    blocked = !mobile.Move(d);
-                }
+                if (!blocked) blocked = !mobile.Move(d);
             }
         }
 

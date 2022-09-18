@@ -82,6 +82,11 @@ public class DoWander : BTNode
         }
         
         m_Mobile.DebugSay("I am wandering");
+        
+        m_Mobile.Warmode = false;
+        m_Mobile.Combatant = null;
+        m_Mobile.FocusMob = null;
+        m_Mobile.CurrentSpeed = m_Mobile.PassiveSpeed;
             
         if (m_Mobile.Home == Point3D.Zero)
         {

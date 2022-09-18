@@ -1,4 +1,6 @@
-﻿namespace Server.Mobiles;
+﻿using System;
+
+namespace Server.Mobiles;
 
 public class DoBardPacified : BTNode
 {
@@ -11,7 +13,7 @@ public class DoBardPacified : BTNode
 
     public override NodeState Evaluate()
     {
-        if (Core.Now < m_Mobile.BardEndTime)
+        if (DateTime.Now < m_Mobile.BardEndTime)
         {
             m_Mobile.DebugSay("I am pacified, I wait");
             m_Mobile.Combatant = null;

@@ -1,4 +1,6 @@
-﻿namespace Server.Mobiles;
+﻿using System;
+
+namespace Server.Mobiles;
 
 public class CheckGuarding : BTNode
 {
@@ -13,6 +15,8 @@ public class CheckGuarding : BTNode
     {
         var guarding = (bool) (m_BtTree.GetData("guarding") ?? false);
         var nextStopGuard = (long) (m_BtTree.GetData("nextStopGuard") ?? 0L);
+        
+        Console.WriteLine("" + Core.TickCount + " " + nextStopGuard);
 
         if (guarding && Core.TickCount < nextStopGuard)
         {

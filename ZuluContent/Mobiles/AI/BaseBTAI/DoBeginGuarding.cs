@@ -20,8 +20,12 @@ public class DoBeginGuarding : BTNode
         m_Mobile.Combatant = null;
         m_Mobile.CurrentSpeed = m_Mobile.ActiveSpeed;
 
+        var nextStopGuard = Core.TickCount + (int)TimeSpan.FromSeconds(10).TotalMilliseconds;
+
         m_BtTree.SetData("guarding", true);
-        m_BtTree.SetData("nextStopGuard", Core.TickCount + (int) TimeSpan.FromSeconds(10).TotalMilliseconds);
+        m_BtTree.SetData("nextStopGuard", nextStopGuard);
+        
+        m_Mobile.DebugSay("Beginning to guard");
 
         State = NodeState.SUCCESS;
         return State;

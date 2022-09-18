@@ -1,4 +1,6 @@
-﻿namespace Server.Mobiles;
+﻿using System;
+
+namespace Server.Mobiles;
 
 public class DoBardProvoked : BTNode
 {
@@ -11,7 +13,7 @@ public class DoBardProvoked : BTNode
 
     public override NodeState Evaluate()
     {
-        if (Core.Now >= m_Mobile.BardEndTime && (m_Mobile.BardMaster == null || m_Mobile.BardMaster.Deleted ||
+        if (DateTime.Now >= m_Mobile.BardEndTime && (m_Mobile.BardMaster == null || m_Mobile.BardMaster.Deleted ||
                                                      m_Mobile.BardMaster.Map != m_Mobile.Map ||
                                                      m_Mobile.GetDistanceToSqrt(m_Mobile.BardMaster) >
                                                      m_Mobile.RangePerception))

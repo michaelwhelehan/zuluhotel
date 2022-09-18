@@ -2,20 +2,27 @@
 
 namespace Server.Mobiles;
 
-public class MeleeBT : BTTree
+public class MeleeBT : BaseBT
 {
-    private BaseCreature m_Mobile;
-    
-    public MeleeBT(BaseCreature mobile)
+    public MeleeBT(BaseCreature mobile) : base(mobile)
     {
-        m_Mobile = mobile;
     }
     
     public static BTNode DoCombat(BaseCreature mobile, BTTree tree)
     {
         return new BTSequence(new List<BTNode>
         {
-            new CheckCombatantExists(mobile),
+            new BTSelector(new List<BTNode>
+            {
+                new CheckCombatantExists(mobile),
+                new CheckCombat(tree),
+            }),
+            new DoEndCombat(tree),
+            new BTSelector(new List<BTNode>
+            {
+                new CheckCombatantExists(mobile),
+                new BTInverter(new BTSucceeder(new DoBeginGuarding(mobile, tree)))
+            }),
             new BTSelector(new List<BTNode>
             {
                 new CheckCombatantInRange(mobile),
@@ -23,6 +30,7 @@ public class MeleeBT : BTTree
                 new CheckCombatantInRange(mobile, 3),
                 new BTInverter(new BTSucceeder(new DoRemoveCombatant(mobile)))
             }),
+            new DoBeginCombat(mobile, tree),
             new CheckMoveTo(mobile),
             new BTSelector(new List<BTNode>
             {
@@ -60,7 +68,8 @@ public class MeleeBT : BTTree
                 new CheckGuarding(tree),
                 new BTInverter(new BTSucceeder(new DoEndGuarding(tree)))
             }),
-            new DoAcquireNewCombatantInRange(mobile),
+            new BTSucceeder(new DoAcquireNewCombatantInRange(mobile)),
+            new DoProcessGuarding(tree),
             new BTInverter(new BTSucceeder(new DoEndGuarding(tree)))
         });
     }
@@ -81,26 +90,26 @@ public class MeleeBT : BTTree
     {
         var root = new BTSequence(new List<BTNode>
         {
-            new BTInverter(new CheckIsDeleted(m_Mobile)),
-            new BTInverter(new CheckMapIsNullOrInternal(m_Mobile)),
-            new BTInverter(new CheckMapSectorInactive(m_Mobile)),
+            new BTInverter(new CheckIsDeleted(Mobile)),
+            new BTInverter(new CheckMapIsNullOrInternal(Mobile)),
+            new BTInverter(new CheckMapSectorInactive(Mobile)),
             new BTSelector(new List<BTNode>
             {
                 new BTSequence(new List<BTNode>
                 {
-                    new CheckBardPacified(m_Mobile),
-                    new DoBardPacified(m_Mobile)
+                    new CheckBardPacified(Mobile),
+                    new DoBardPacified(Mobile)
                 }),
                 new BTSequence(new List<BTNode>
                 {
-                    new CheckBardProvoked(m_Mobile),
-                    new BTSucceeder(DoCombat(m_Mobile, this)),
-                    new DoBardProvoked(m_Mobile)
+                    new CheckBardProvoked(Mobile),
+                    new BTSucceeder(DoCombat(Mobile, this)),
+                    new DoBardProvoked(Mobile)
                 }),
                 new BTSequence(new List<BTNode>
                 {
-                    new BTInverter(new CheckControlled(m_Mobile)),
-                    DoThink(m_Mobile, this)
+                    new BTInverter(new CheckControlled(Mobile)),
+                    DoThink(Mobile, this)
                 }),
             })
         });
