@@ -2,28 +2,18 @@
 
 namespace Server.Mobiles;
 
-public class DoBeginCombat : BTNode
+public class DoBeginCombat<T> : BTNode<T> where T : IAIState
 {
-    private readonly BTTree m_BtTree;
-    private readonly BaseCreature m_Mobile;
-
-    public DoBeginCombat(BaseCreature mobile, BTTree tree)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-        m_BtTree = tree;
-    }
+        treeState.Creature.Warmode = true;
+        treeState.Creature.FocusMob = null;
+        treeState.Creature.CurrentSpeed = treeState.Creature.ActiveSpeed;
 
-    public override NodeState Evaluate()
-    {
-        m_Mobile.Warmode = true;
-        m_Mobile.FocusMob = null;
-        m_Mobile.CurrentSpeed = m_Mobile.ActiveSpeed;
+        treeState.InCombat = true;
 
-        m_BtTree.SetData("combat", true);
-
-        m_Mobile.DebugSay("Beginning combat");
-
-        State = NodeState.SUCCESS;
-        return State;
+        treeState.Creature.DebugSay("Beginning combat");
+        
+        return NodeState.SUCCESS;
     }
 }

@@ -9,31 +9,29 @@ public enum NodeState
     FAILURE
 }
 
-public class BTNode
+public class BTNode<T> where T : IAIState
 {
-    protected NodeState State { get; set; }
-
-    public BTNode Parent { get; set; }
-    protected List<BTNode> Children { get; } = new();
+    public BTNode<T> Parent { get; set; }
+    protected List<BTNode<T>> Children { get; } = new();
 
     public BTNode()
     {
         Parent = null;
     }
 
-    public BTNode(List<BTNode> children)
+    public BTNode(List<BTNode<T>> children)
     {
         foreach (var child in children)
             _Attach(child);
     }
 
-    private void _Attach(BTNode node)
+    private void _Attach(BTNode<T> node)
     {
         node.Parent = this;
         Children.Add(node);
     }
 
-    public virtual NodeState Evaluate()
+    public virtual NodeState Evaluate(T treeState)
     {
         return NodeState.FAILURE;
     }

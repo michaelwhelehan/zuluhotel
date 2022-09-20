@@ -6,26 +6,46 @@ using MoveImpl = Server.Movement.MovementImpl;
 
 namespace Server.Mobiles;
 
-public class BaseBTAI
+public interface IAIState
+{
+    public BaseCreature Creature { get; }
+    public bool InCombat { get; set; }
+    public bool IsGuarding { get; set; }
+    public long NextStopGuard { get; set; }
+    public PathFollower Path { get; set; }
+    public long NextMove { get; set; }
+}
+
+public class AIState : IAIState
+{
+    public BaseCreature Creature { get; init; }
+    public bool InCombat { get; set; }
+    public bool IsGuarding { get; set; }
+    public long NextStopGuard { get; set; }
+    public PathFollower Path { get; set; }
+    public long NextMove { get; set; }
+}
+
+public class BaseBTAI<T> where T : IAIState
 {
     private readonly Timer m_Timer;
-    private BTTree BehaviorTree { get; }
+    private IBTTree<T> BehaviorTree { get; }
+    
+    private T State { get; }
 
-    public BaseCreature Mobile { get; }
-
-    public BaseBTAI(BaseCreature mobile, BTTree behaviorTree)
+    public BaseBTAI(T state, IBTTree<T> behaviorTree)
     {
+        State = state;
         BehaviorTree = behaviorTree;
-        Mobile = mobile;
-        m_Timer = new AITimer(this);
+        m_Timer = new AITimer<T>(this);
 
         bool activate;
 
-        if (!mobile.PlayerRangeSensitive)
+        if (!State.Creature.PlayerRangeSensitive)
             activate = true;
         else if (World.Loading)
             activate = false;
-        else if (mobile.Map == null || mobile.Map == Map.Internal || !mobile.Map.GetSector(mobile.Location).Active)
+        else if (State.Creature.Map == null || State.Creature.Map == Map.Internal || !State.Creature.Map.GetSector(State.Creature.Location).Active)
             activate = false;
         else
             activate = true;
@@ -35,25 +55,25 @@ public class BaseBTAI
 
     public void Deactivate()
     {
-        if (Mobile.PlayerRangeSensitive)
+        if (State.Creature.PlayerRangeSensitive)
         {
             m_Timer.Stop();
 
-            var se = Mobile.Spawner;
+            var se = State.Creature.Spawner;
 
-            if (se != null && se.ReturnOnDeactivate && !Mobile.Controlled)
+            if (se != null && se.ReturnOnDeactivate && !State.Creature.Controlled)
             {
                 if (se.HomeLocation == Point3D.Zero)
                 {
-                    if (!Mobile.Region.AcceptsSpawnsFrom(se.Region)) Timer.DelayCall(TimeSpan.Zero, ReturnToHome);
+                    if (!State.Creature.Region.AcceptsSpawnsFrom(se.Region)) Timer.DelayCall(TimeSpan.Zero, ReturnToHome);
                 }
-                else if (!Mobile.InRange(se.HomeLocation, se.HomeRange))
+                else if (!State.Creature.InRange(se.HomeLocation, se.HomeRange))
                 {
                     Timer.DelayCall(TimeSpan.Zero, ReturnToHome);
                 }
             }
         }
-        else if (Mobile.Deleted)
+        else if (State.Creature.Deleted)
         {
             m_Timer.Stop();
         }
@@ -63,8 +83,6 @@ public class BaseBTAI
     {
         if (!m_Timer.Running)
         {
-            BehaviorTree.Init();
-
             m_Timer.Delay = TimeSpan.Zero;
             m_Timer.Start();
         }
@@ -77,20 +95,20 @@ public class BaseBTAI
 
     public void OnAggressiveAction(Mobile aggressor)
     {
-        var currentCombat = Mobile.Combatant;
+        var currentCombat = State.Creature.Combatant;
 
         if (currentCombat != null && !aggressor.Hidden && currentCombat != aggressor &&
-            Mobile.GetDistanceToSqrt(currentCombat) > Mobile.GetDistanceToSqrt(aggressor))
-            Mobile.Combatant = aggressor;
+            State.Creature.GetDistanceToSqrt(currentCombat) > State.Creature.GetDistanceToSqrt(aggressor))
+            State.Creature.Combatant = aggressor;
     }
 
     private void ReturnToHome()
     {
-        if (Mobile.Spawner != null)
+        if (State.Creature.Spawner != null)
         {
-            var loc = Mobile.Spawner.GetSpawnPosition(Mobile, Mobile.Spawner.Map);
+            var loc = State.Creature.Spawner.GetSpawnPosition(State.Creature, State.Creature.Spawner.Map);
 
-            if (loc != Point3D.Zero) Mobile.MoveToWorld(loc, Mobile.Spawner.Map);
+            if (loc != Point3D.Zero) State.Creature.MoveToWorld(loc, State.Creature.Spawner.Map);
         }
     }
 
@@ -457,20 +475,20 @@ public class BaseBTAI
         return MoveResult.Success;
     }
 
-    private class AITimer : Timer
+    private class AITimer<T> : Timer where T : IAIState
     {
-        private readonly BaseBTAI m_AI;
+        private readonly BaseBTAI<T> m_AI;
 
-        public AITimer(BaseBTAI ai)
+        public AITimer(BaseBTAI<T> ai)
             : base(TimeSpan.FromSeconds(Utility.RandomDouble()),
-                TimeSpan.FromSeconds(Math.Max(0.0, ai.Mobile.CurrentSpeed)))
+                TimeSpan.FromSeconds(Math.Max(0.0, ai.State.Creature.CurrentSpeed)))
         {
             m_AI = ai;
         }
 
         protected override void OnTick()
         {
-            var state = m_AI.BehaviorTree.Update();
+            var state = m_AI.BehaviorTree.Update(m_AI.State);
 
             if (state == NodeState.FAILURE)
                 m_AI.Deactivate();

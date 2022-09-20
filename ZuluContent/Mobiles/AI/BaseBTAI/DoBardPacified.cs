@@ -2,31 +2,22 @@
 
 namespace Server.Mobiles;
 
-public class DoBardPacified : BTNode
+public class DoBardPacified<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public DoBardPacified(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
-
-    public override NodeState Evaluate()
-    {
-        if (DateTime.Now < m_Mobile.BardEndTime)
+        if (DateTime.Now < treeState.Creature.BardEndTime)
         {
-            m_Mobile.DebugSay("I am pacified, I wait");
-            m_Mobile.Combatant = null;
-            m_Mobile.Warmode = false;
+            treeState.Creature.DebugSay("I am pacified, I wait");
+            treeState.Creature.Combatant = null;
+            treeState.Creature.Warmode = false;
             
-            State = NodeState.RUNNING;
-            return State;
+            return NodeState.RUNNING;
         }
         
-        m_Mobile.DebugSay("I'm not pacified any longer");
-        m_Mobile.BardPacified = false;
-
-        State = NodeState.FAILURE;
-        return State;
+        treeState.Creature.DebugSay("I'm not pacified any longer");
+        treeState.Creature.BardPacified = false;
+        
+        return NodeState.FAILURE;
     }
 }

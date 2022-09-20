@@ -1,23 +1,14 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckBardProvoked : BTNode
+public class CheckBardProvoked<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public CheckBardProvoked(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
-
-    public override NodeState Evaluate()
-    {
-        if (m_Mobile.BardProvoked)
+        if (treeState.Creature.BardProvoked)
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

@@ -1,28 +1,21 @@
 ﻿namespace Server.Mobiles;
 
-public class DoAcquireNewCombatantInRange : BTNode
+public class DoAcquireNewCombatantInRange<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public DoAcquireNewCombatantInRange(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
-
-    public override NodeState Evaluate()
-    {
-        if (BaseBTAI.AcquireFocusMob(m_Mobile, m_Mobile.RangePerception, m_Mobile.FightMode, false, false, true))
+        if (BaseBTAI<T>.AcquireFocusMob(treeState.Creature, treeState.Creature.RangePerception,
+                treeState.Creature.FightMode, false, false, true))
         {
-            m_Mobile.DebugSay("My move is blocked, so I am going to attack {0}", m_Mobile.FocusMob.Name);
-            
-            m_Mobile.Combatant = m_Mobile.FocusMob;
-            m_Mobile.FocusMob = null;
+            treeState.Creature.DebugSay("My move is blocked, so I am going to attack {0}",
+                treeState.Creature.FocusMob.Name);
 
-            State = NodeState.SUCCESS;
-            return State;
+            treeState.Creature.Combatant = treeState.Creature.FocusMob;
+            treeState.Creature.FocusMob = null;
+
+            return NodeState.SUCCESS;
         }
 
-        State = NodeState.FAILURE;
-        return State;
+        return NodeState.FAILURE;
     }
 }

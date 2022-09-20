@@ -1,26 +1,17 @@
 ﻿namespace Server.Mobiles;
 
-public class DoProcessGuarding : BTNode
+public class DoProcessGuarding<T> : BTNode<T> where T : IAIState
 {
-    private readonly BTTree m_BtTree;
-
-    public DoProcessGuarding(BTTree tree)
+    public override NodeState Evaluate(T treeState)
     {
-        m_BtTree = tree;
-    }
-
-    public override NodeState Evaluate()
-    {
-        var guarding = (bool) (m_BtTree.GetData("guarding") ?? false);
-        var nextStopGuard = (long) (m_BtTree.GetData("nextStopGuard") ?? 0L);
+        var guarding = treeState.IsGuarding;
+        var nextStopGuard = treeState.NextStopGuard;
         
         if (guarding && Core.TickCount < nextStopGuard)
         {
-            State = NodeState.RUNNING;
-            return State;
+            return NodeState.RUNNING;
         }
-
-        State = NodeState.SUCCESS;
-        return State;
+        
+        return NodeState.SUCCESS;
     }
 }

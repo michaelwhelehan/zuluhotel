@@ -1,29 +1,25 @@
 ﻿namespace Server.Mobiles;
 
-public class DoMoveToCombatant : BTNode
+public class DoMoveToCombatant<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    private readonly BTTree m_BtTree;
     private readonly bool m_BadStateOk;
     
-    public DoMoveToCombatant(BaseCreature mobile, BTTree tree, bool badStateOk)
+    public DoMoveToCombatant(bool badStateOk)
     {
-        m_Mobile = mobile;
-        m_BtTree = tree;
         m_BadStateOk = badStateOk;
     }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
-        var combatant = m_Mobile.Combatant;
+        var combatant = treeState.Creature.Combatant;
         
-        m_Mobile.DebugSay("Trying to move to my combatant");
+        treeState.Creature.DebugSay("Trying to move to my combatant");
 
-        var nextMove = (long) (m_BtTree.GetData("nextMove") ?? Core.TickCount);
+        var nextMove = treeState.NextMove;
         
-        var res = BaseBTAI.DoMoveImpl(m_Mobile, m_Mobile.GetDirectionTo(combatant), ref nextMove);
-        
-        m_BtTree.SetData("nextMove", nextMove);
+        var res = BaseBTAI<T>.DoMoveImpl(treeState.Creature, treeState.Creature.GetDirectionTo(combatant), ref nextMove);
+
+        treeState.NextMove = nextMove;
 
         var success = res == MoveResult.Success || res == MoveResult.SuccessAutoTurn ||
                       m_BadStateOk && res == MoveResult.BadState;
@@ -39,11 +35,9 @@ public class DoMoveToCombatant : BTNode
 
         if (success)
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

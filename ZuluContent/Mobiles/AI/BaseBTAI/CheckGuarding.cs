@@ -2,29 +2,18 @@
 
 namespace Server.Mobiles;
 
-public class CheckGuarding : BTNode
+public class CheckGuarding<T> : BTNode<T> where T : IAIState
 {
-    private readonly BTTree m_BtTree;
-    
-    public CheckGuarding(BTTree tree)
+    public override NodeState Evaluate(T treeState)
     {
-        m_BtTree = tree;
-    }
-
-    public override NodeState Evaluate()
-    {
-        var guarding = (bool) (m_BtTree.GetData("guarding") ?? false);
-        var nextStopGuard = (long) (m_BtTree.GetData("nextStopGuard") ?? 0L);
-        
-        Console.WriteLine("" + Core.TickCount + " " + nextStopGuard);
+        var guarding = treeState.IsGuarding;
+        var nextStopGuard = treeState.NextStopGuard;
 
         if (guarding && Core.TickCount < nextStopGuard)
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

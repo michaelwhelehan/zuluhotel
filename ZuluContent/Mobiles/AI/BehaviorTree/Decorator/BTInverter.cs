@@ -2,23 +2,23 @@
 
 namespace Server.Mobiles;
 
-public class BTInverter : BTNode
+public class BTInverter<T> : BTNode<T> where T : IAIState
 {
     public BTInverter()
     {
     }
     
-    public BTInverter(BTNode child) : base(new List<BTNode> { child }) { }
+    public BTInverter(BTNode<T> child) : base(new List<BTNode<T>> { child }) { }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
-        State = Children[0].Evaluate();
+        var nodeState = Children[0].Evaluate(treeState);
 
-        return State switch
+        return nodeState switch
         {
             NodeState.FAILURE => NodeState.SUCCESS,
             NodeState.SUCCESS => NodeState.FAILURE,
-            _ => State
+            _ => nodeState
         };
     }
 }

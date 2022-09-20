@@ -1,29 +1,18 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckPathExists : BTNode
+public class CheckPathExists<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    private readonly BTTree m_BtTree;
-    
-    public CheckPathExists(BaseCreature mobile, BTTree tree)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-        m_BtTree = tree;
-    }
+        var combatant = treeState.Creature.Combatant;
 
-    public override NodeState Evaluate()
-    {
-        var combatant = m_Mobile.Combatant;
-
-        var path = (PathFollower) m_BtTree.GetData("path");
+        var path = treeState.Path;
 
         if (path != null && path.Goal == combatant)
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

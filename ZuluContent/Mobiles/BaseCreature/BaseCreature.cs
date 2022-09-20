@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Scripts.Zulu.Engines.Classes;
 using Scripts.Zulu.Utilities;
 using Server.ContextMenus;
-using Server.Engines.Magic;
 using Server.Regions;
 using Server.Network;
 using Server.Multis;
@@ -21,7 +20,6 @@ using Server.Scripts.Engines.Loot;
 using Server.Utilities;
 using ZuluContent.Configuration.Types.Creatures;
 using ZuluContent.Zulu.Engines.Magic;
-using ZuluContent.Zulu.Engines.Magic.Enchantments.Buffs;
 using ZuluContent.Zulu.Items;
 using static Scripts.Zulu.Engines.Classes.SkillCheck;
 
@@ -457,7 +455,7 @@ namespace Server.Mobiles
 
         public BaseAI AIObject { get; private set; }
         
-        public BaseBTAI BTAIObject { get; private set; }
+        public BaseBTAI<AIState> BTAIObject { get; private set; }
 
         public const int MaxOwners = 5;
         
@@ -1524,7 +1522,9 @@ namespace Server.Mobiles
 
             if (newAi == AIType.AI_Melee)
             {
-                BTAIObject = new BaseBTAI(this, new MeleeBT(this));
+                var state = new AIState { Creature = this };
+                
+                BTAIObject = new BaseBTAI<AIState>(state, MeleeBT<AIState>.Instance);
                 return;
             }
 

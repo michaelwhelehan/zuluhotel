@@ -1,51 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Server.Items;
+﻿namespace Server.Mobiles;
 
-namespace Server.Mobiles;
-
-public class DoCreatePath : BTNode
+public class DoCreatePath<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    private readonly BTTree m_BtTree;
-    
-    public DoCreatePath(BaseCreature mobile, BTTree tree)
+    private static MoveResult _MoveDirection(Direction d, T treeState)
     {
-        m_Mobile = mobile;
-        m_BtTree = tree;
-    }
+        var nextMove = treeState.NextMove;
 
-    private MoveResult _MoveDirection(Direction d)
-    {
-        var nextMove = (long) (m_BtTree.GetData("nextMove") ?? Core.TickCount);
+        var result = BaseBTAI<T>.DoMoveImpl(treeState.Creature, d, ref nextMove);
 
-        var result = BaseBTAI.DoMoveImpl(m_Mobile, d, ref nextMove);
-        
-        m_BtTree.SetData("nextMove", nextMove);
+        treeState.NextMove = nextMove;
 
         return result;
     }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
-        var combatant = m_Mobile.Combatant;
+        var combatant = treeState.Creature.Combatant;
 
         if (combatant == null)
         {
-            State = NodeState.FAILURE;
-            return State;
+            return NodeState.FAILURE;
         }
         
-        m_Mobile.DebugSay("Creating path to follow to my combatant");
+        treeState.Creature.DebugSay("Creating path to follow to my combatant");
         
-        var path = new PathFollower(m_Mobile, combatant)
+        var path = new PathFollower(treeState.Creature, combatant)
         {
-            Mover = _MoveDirection
+            Mover = (d) => _MoveDirection(d, treeState)
         };
-        m_BtTree.SetData("path", path);
-
-        State = NodeState.SUCCESS;
-        return State;
+        treeState.Path = path;
+        
+        return NodeState.SUCCESS;
     }
 }

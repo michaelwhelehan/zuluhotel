@@ -2,21 +2,12 @@
 
 namespace Server.Mobiles;
 
-public class DoEndGuarding : BTNode
+public class DoEndGuarding<T> : BTNode<T> where T : IAIState
 {
-    private readonly BTTree m_BtTree;
-
-    public DoEndGuarding(BTTree tree)
+    public override NodeState Evaluate(T treeState)
     {
-        m_BtTree = tree;
-    }
-
-    public override NodeState Evaluate()
-    {
-        m_BtTree.ClearData("guarding");
-        m_BtTree.ClearData("nextStopGuard");
-
-        State = NodeState.SUCCESS;
-        return State;
+        treeState.IsGuarding = false;
+        
+        return NodeState.SUCCESS;
     }
 }

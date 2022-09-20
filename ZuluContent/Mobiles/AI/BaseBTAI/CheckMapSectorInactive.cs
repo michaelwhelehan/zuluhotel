@@ -1,28 +1,19 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckMapSectorInactive : BTNode
+public class CheckMapSectorInactive<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public CheckMapSectorInactive(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
-
-    public override NodeState Evaluate()
-    {
-        if (m_Mobile.PlayerRangeSensitive)
+        if (treeState.Creature.PlayerRangeSensitive)
         {
-            var sect = m_Mobile.Map.GetSector(m_Mobile.Location);
+            var sect = treeState.Creature.Map.GetSector(treeState.Creature.Location);
 
             if (!sect.Active)
             {
-                State = NodeState.SUCCESS;
-                return State;
+                return NodeState.SUCCESS;
             }
         }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

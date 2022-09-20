@@ -1,19 +1,11 @@
 ﻿namespace Server.Mobiles;
 
-public class DoClearPath : BTNode
+public class DoClearPath<T> : BTNode<T> where T : IAIState
 {
-    private readonly BTTree m_BtTree;
-
-    public DoClearPath(BTTree tree)
+    public override NodeState Evaluate(T treeState)
     {
-        m_BtTree = tree;
-    }
-
-    public override NodeState Evaluate()
-    {
-        m_BtTree.ClearData("path");
-
-        State = NodeState.SUCCESS;
-        return State;
+        treeState.Path = null;
+        
+        return NodeState.SUCCESS;
     }
 }

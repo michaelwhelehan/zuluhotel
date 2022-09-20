@@ -2,25 +2,25 @@
 
 namespace Server.Mobiles;
 
-public class BTRepeatUntilFail : BTNode
+public class BTRepeatUntilFail<T> : BTNode<T> where T : IAIState
 {
     public BTRepeatUntilFail()
     {
     }
 
-    public BTRepeatUntilFail(BTNode child) : base(new List<BTNode> { child })
+    public BTRepeatUntilFail(BTNode<T> child) : base(new List<BTNode<T>> { child })
     {
     }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
-        State = NodeState.RUNNING;
+        var nodeState = NodeState.RUNNING;
         
-        while (State != NodeState.FAILURE)
+        while (nodeState != NodeState.FAILURE)
         {
-            State = Children[0].Evaluate();
+            nodeState = Children[0].Evaluate(treeState);
         }
 
-        return State;
+        return nodeState;
     }
 }

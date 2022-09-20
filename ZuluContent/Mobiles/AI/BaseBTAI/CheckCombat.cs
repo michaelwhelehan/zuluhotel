@@ -1,25 +1,14 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckCombat : BTNode
+public class CheckCombat<T> : BTNode<T> where T : IAIState
 {
-    private readonly BTTree m_BtTree;
-    
-    public CheckCombat(BTTree tree)
+    public override NodeState Evaluate(T treeState)
     {
-        m_BtTree = tree;
-    }
-
-    public override NodeState Evaluate()
-    {
-        var combat = (bool) (m_BtTree.GetData("combat") ?? false);
-
-        if (combat)
+        if (treeState.InCombat)
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

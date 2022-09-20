@@ -1,23 +1,14 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckMapIsNullOrInternal : BTNode
+public class CheckMapIsNullOrInternal<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public CheckMapIsNullOrInternal(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
-
-    public override NodeState Evaluate()
-    {
-        if (m_Mobile.Map == null || m_Mobile.Map == Map.Internal)
+        if (treeState.Creature.Map == null || treeState.Creature.Map == Map.Internal)
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

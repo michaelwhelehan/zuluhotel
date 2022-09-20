@@ -2,18 +2,18 @@
 
 namespace Server.Mobiles;
 
-public class BTSucceeder : BTNode
+public class BTSucceeder<T> : BTNode<T> where T : IAIState
 {
     public BTSucceeder()
     {
     }
     
-    public BTSucceeder(BTNode child) : base(new List<BTNode> { child }) { }
+    public BTSucceeder(BTNode<T> child) : base(new List<BTNode<T>> { child }) { }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
-        State = Children[0].Evaluate();
+        var nodeState = Children[0].Evaluate(treeState);
 
-        return State == NodeState.RUNNING ? NodeState.RUNNING : NodeState.SUCCESS;
+        return nodeState == NodeState.RUNNING ? NodeState.RUNNING : NodeState.SUCCESS;
     }
 }

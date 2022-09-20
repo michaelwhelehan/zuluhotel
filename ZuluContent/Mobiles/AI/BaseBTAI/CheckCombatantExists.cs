@@ -1,27 +1,18 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckCombatantExists : BTNode
+public class CheckCombatantExists<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public CheckCombatantExists(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
+        var combatant = treeState.Creature.Combatant;
 
-    public override NodeState Evaluate()
-    {
-        var combatant = m_Mobile.Combatant;
-
-        if (combatant == null || combatant.Deleted || combatant.Map != m_Mobile.Map || !combatant.Alive)
+        if (combatant == null || combatant.Deleted || combatant.Map != treeState.Creature.Map || !combatant.Alive)
         {
-            m_Mobile.DebugSay("My combatant is gone");
+            treeState.Creature.DebugSay("My combatant is gone");
             
-            State = NodeState.FAILURE;
-            return State;
+            return NodeState.FAILURE;
         }
-
-        State = NodeState.SUCCESS;
-        return State;
+        
+        return NodeState.SUCCESS;
     }
 }

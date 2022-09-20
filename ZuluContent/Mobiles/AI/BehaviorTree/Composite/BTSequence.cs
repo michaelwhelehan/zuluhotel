@@ -2,35 +2,31 @@
 
 namespace Server.Mobiles;
 
-public class BTSequence : BTNode
+public class BTSequence<T> : BTNode<T> where T : IAIState
 {
     public BTSequence()
     {
     }
 
-    public BTSequence(List<BTNode> children) : base(children)
+    public BTSequence(List<BTNode<T>> children) : base(children)
     {
     }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
         foreach (var node in Children)
-            switch (node.Evaluate())
+            switch (node.Evaluate(treeState))
             {
                 case NodeState.SUCCESS:
                     continue;
                 case NodeState.FAILURE:
-                    State = NodeState.FAILURE;
-                    return State;
+                    return NodeState.FAILURE;
                 case NodeState.RUNNING:
-                    State = NodeState.RUNNING;
-                    return State;
+                    return NodeState.RUNNING;
                 default:
-                    State = NodeState.SUCCESS;
-                    return State;
+                    return NodeState.SUCCESS;
             }
-
-        State = NodeState.SUCCESS;
-        return State;
+        
+        return NodeState.SUCCESS;
     }
 }

@@ -1,27 +1,23 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckCombatantInRange : BTNode
+public class CheckCombatantInRange<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
     private readonly int m_Multiplier;
     
-    public CheckCombatantInRange(BaseCreature mobile, int multiplier = 1)
+    public CheckCombatantInRange(int multiplier = 1)
     {
-        m_Mobile = mobile;
         m_Multiplier = multiplier;
     }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
-        var combatant = m_Mobile.Combatant;
+        var combatant = treeState.Creature.Combatant;
 
-        if (m_Mobile.InRange(combatant, m_Mobile.RangePerception * m_Multiplier))
+        if (treeState.Creature.InRange(combatant, treeState.Creature.RangePerception * m_Multiplier))
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
         
-        State = NodeState.FAILURE;
-        return State;
+        return NodeState.FAILURE;
     }
 }

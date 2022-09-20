@@ -1,25 +1,16 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckCombatantTooFarAway : BTNode
+public class CheckCombatantTooFarAway<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public CheckCombatantTooFarAway(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
+        var combatant = treeState.Creature.Combatant;
 
-    public override NodeState Evaluate()
-    {
-        var combatant = m_Mobile.Combatant;
-
-        if (m_Mobile.GetDistanceToSqrt(combatant) > m_Mobile.RangePerception + 1)
+        if (treeState.Creature.GetDistanceToSqrt(combatant) > treeState.Creature.RangePerception + 1)
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
         
-        State = NodeState.FAILURE;
-        return State;
+        return NodeState.FAILURE;
     }
 }

@@ -1,23 +1,14 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckIsDeleted : BTNode
+public class CheckIsDeleted<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public CheckIsDeleted(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
-
-    public override NodeState Evaluate()
-    {
-        if (m_Mobile.Deleted)
+        if (treeState.Creature.Deleted)
         {
-            State = NodeState.SUCCESS;
-            return State;
+            return NodeState.SUCCESS;
         }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

@@ -2,34 +2,31 @@
 
 namespace Server.Mobiles;
 
-public class BTSelector : BTNode
+public class BTSelector<T> : BTNode<T> where T : IAIState
 {
     public BTSelector()
     {
     }
 
-    public BTSelector(List<BTNode> children) : base(children)
+    public BTSelector(List<BTNode<T>> children) : base(children)
     {
     }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
         foreach (var node in Children)
-            switch (node.Evaluate())
+            switch (node.Evaluate(treeState))
             {
                 case NodeState.FAILURE:
                     continue;
                 case NodeState.SUCCESS:
-                    State = NodeState.SUCCESS;
-                    return State;
+                    return NodeState.SUCCESS;
                 case NodeState.RUNNING:
-                    State = NodeState.RUNNING;
-                    return State;
+                    return NodeState.RUNNING;
                 default:
                     continue;
             }
-
-        State = NodeState.FAILURE;
-        return State;
+        
+        return NodeState.FAILURE;
     }
 }

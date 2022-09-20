@@ -1,19 +1,11 @@
 ﻿namespace Server.Mobiles;
 
-public class DoRemoveCombatant : BTNode
+public class DoRemoveCombatant<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public DoRemoveCombatant(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
-
-    public override NodeState Evaluate()
-    {
-        m_Mobile.Combatant = null;
-
-        State = NodeState.SUCCESS;
-        return State;
+        treeState.Creature.Combatant = null;
+        
+        return NodeState.SUCCESS;
     }
 }

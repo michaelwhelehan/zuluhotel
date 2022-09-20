@@ -2,32 +2,22 @@
 
 namespace Server.Mobiles;
 
-public class DoBeginGuarding : BTNode
+public class DoBeginGuarding<T> : BTNode<T> where T : IAIState
 {
-    private readonly BTTree m_BtTree;
-    private readonly BaseCreature m_Mobile;
-
-    public DoBeginGuarding(BaseCreature mobile, BTTree tree)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-        m_BtTree = tree;
-    }
-
-    public override NodeState Evaluate()
-    {
-        m_Mobile.Warmode = true;
-        m_Mobile.FocusMob = null;
-        m_Mobile.Combatant = null;
-        m_Mobile.CurrentSpeed = m_Mobile.ActiveSpeed;
+        treeState.Creature.Warmode = true;
+        treeState.Creature.FocusMob = null;
+        treeState.Creature.Combatant = null;
+        treeState.Creature.CurrentSpeed = treeState.Creature.ActiveSpeed;
 
         var nextStopGuard = Core.TickCount + (int)TimeSpan.FromSeconds(10).TotalMilliseconds;
 
-        m_BtTree.SetData("guarding", true);
-        m_BtTree.SetData("nextStopGuard", nextStopGuard);
-        
-        m_Mobile.DebugSay("Beginning to guard");
+        treeState.IsGuarding = true;
+        treeState.NextStopGuard = nextStopGuard;
 
-        State = NodeState.SUCCESS;
-        return State;
+        treeState.Creature.DebugSay("Beginning to guard");
+        
+        return NodeState.SUCCESS;
     }
 }

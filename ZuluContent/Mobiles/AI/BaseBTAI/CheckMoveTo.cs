@@ -1,25 +1,16 @@
 ﻿namespace Server.Mobiles;
 
-public class CheckMoveTo : BTNode
+public class CheckMoveTo<T> : BTNode<T> where T : IAIState
 {
-    private readonly BaseCreature m_Mobile;
-    
-    public CheckMoveTo(BaseCreature mobile)
+    public override NodeState Evaluate(T treeState)
     {
-        m_Mobile = mobile;
-    }
-
-    public override NodeState Evaluate()
-    {
-        var combatant = m_Mobile.Combatant;
+        var combatant = treeState.Creature.Combatant;
         
-        if (m_Mobile.Deleted || m_Mobile.DisallowAllMoves || combatant == null || combatant.Deleted)
+        if (treeState.Creature.Deleted || treeState.Creature.DisallowAllMoves || combatant == null || combatant.Deleted)
         {
-            State = NodeState.FAILURE;
-            return State;
+            return NodeState.FAILURE;
         }
-
-        State = NodeState.SUCCESS;
-        return State;
+        
+        return NodeState.SUCCESS;
     }
 }

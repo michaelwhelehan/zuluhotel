@@ -2,7 +2,7 @@
 
 namespace Server.Mobiles;
 
-public class BTRepeater : BTNode
+public class BTRepeater<T> : BTNode<T> where T : IAIState
 {
     private int m_NumRepeats;
     
@@ -10,20 +10,20 @@ public class BTRepeater : BTNode
     {
     }
 
-    public BTRepeater(BTNode child, int numRepeats = -1) : base(new List<BTNode> { child })
+    public BTRepeater(BTNode<T> child, int numRepeats = -1) : base(new List<BTNode<T>> { child })
     {
         m_NumRepeats = numRepeats;
     }
 
-    public override NodeState Evaluate()
+    public override NodeState Evaluate(T treeState)
     {
-        State = NodeState.RUNNING;
+        var nodeState = NodeState.RUNNING;
         
         while (m_NumRepeats == -1 || m_NumRepeats-- > 0)
         {
-            State = Children[0].Evaluate();
+            nodeState = Children[0].Evaluate(treeState);
         }
 
-        return State;
+        return nodeState;
     }
 }
