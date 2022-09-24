@@ -1,25 +1,29 @@
 ﻿namespace Server.Mobiles;
 
-public class DoMoveToCombatant<T> : BTNode<T> where T : IAIState
+public class DoMoveToTarget<T> : BTNode<T> where T : IAIState
 {
+    private readonly MoveToTargetType m_MoveToTarget;
     private readonly bool m_BadStateOk;
     
-    public DoMoveToCombatant(bool badStateOk)
+    public DoMoveToTarget(MoveToTargetType moveToTarget, bool badStateOk)
     {
+        m_MoveToTarget = moveToTarget;
         m_BadStateOk = badStateOk;
     }
 
     public override NodeState Evaluate(T treeState)
     {
-        var combatant = treeState.Creature.Combatant;
+        var target = m_MoveToTarget switch
+        {
+            MoveToTargetType.Combatant => treeState.Creature.Combatant,
+            MoveToTargetType.ControlTarget => treeState.Creature.ControlTarget,
+            MoveToTargetType.ControlMaster => treeState.Creature.ControlMaster,
+            _ => treeState.Creature.Combatant
+        };
         
-        treeState.Creature.DebugSay("Trying to move to my combatant");
+        treeState.Creature.DebugSay("Trying to move to my target");
 
-        var nextMove = treeState.NextMove;
-        
-        var res = BaseBTAI<T>.DoMoveImpl(treeState.Creature, treeState.Creature.GetDirectionTo(combatant), ref nextMove);
-
-        treeState.NextMove = nextMove;
+        var res = treeState.Creature.DoMoveImpl(treeState.Creature.GetDirectionTo(target));
 
         var success = res == MoveResult.Success || res == MoveResult.SuccessAutoTurn ||
                       m_BadStateOk && res == MoveResult.BadState;

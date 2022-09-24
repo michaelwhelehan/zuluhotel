@@ -15,11 +15,7 @@ public class DoWander<T> : BTNode<T> where T : IAIState
 
     private bool _DoMove(Direction d, T treeState)
     {
-        var nextMove = treeState.NextMove;
-        
-        var res = BaseBTAI<T>.DoMoveImpl(treeState.Creature, d, ref nextMove);
-
-        treeState.NextMove = nextMove;
+        var res = treeState.Creature.DoMoveImpl(d);
 
         return res is MoveResult.Success or MoveResult.SuccessAutoTurn;
     }

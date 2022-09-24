@@ -48,7 +48,7 @@ public class MeleeBT<T> : BaseSingleton<MeleeBT<T>>, IBTTree<T> where T : IAISta
                     new DoFollowPath<T>(),
                     new DoClearPath<T>()
                 }),
-                new DoMoveToCombatant<T>(true),
+                new DoMoveToTarget<T>(MoveToTargetType.Combatant, true),
                 new BTSequence<T>(new List<BTNode<T>>
                 {
                     new DoCreatePath<T>(),
@@ -56,7 +56,7 @@ public class MeleeBT<T> : BaseSingleton<MeleeBT<T>>, IBTTree<T> where T : IAISta
                     new DoClearPath<T>()
                 }),
                 new DoAcquireNewCombatantInRange<T>(),
-                new BTInverter<T>(new CheckCombatantTooFarAway<T>()),
+                new BTInverter<T>(new CheckTargetTooFarAway<T>()),
                 new DoBeginGuarding<T>()
             }),
         });
@@ -74,6 +74,124 @@ public class MeleeBT<T> : BaseSingleton<MeleeBT<T>>, IBTTree<T> where T : IAISta
             new BTSucceeder<T>(new DoAcquireNewCombatantInRange<T>()),
             new DoProcessGuarding<T>(),
             new BTInverter<T>(new BTSucceeder<T>(new DoEndGuarding<T>()))
+        });
+    }
+    
+    public static BTNode<T> DoAttack()
+    {
+        return new BTSequence<T>(new List<BTNode<T>>
+        {
+            new CheckControlOrder<T>(OrderType.Attack),
+            new DoBeginAttack<T>(),
+            new BTSelector<T>(new List<BTNode<T>>
+            {
+                DoCombat(),
+                DoLastOrder()
+            }),
+        });
+    }
+
+    public static BTNode<T> DoLastOrder()
+    {
+        return new BTInverter<T>(new BTSucceeder<T>(new BTSequence<T>(new List<BTNode<T>>
+        {
+            new CheckLastOrderFollowing<T>(),
+            new DoChangeLastOrder<T>()
+        })));
+    }
+    
+    public static BTNode<T> DoFollow()
+    {
+        return new BTSequence<T>(new List<BTNode<T>>
+        {
+            new CheckControlOrder<T>(OrderType.Follow),
+            new CheckMoveTo<T>(MoveToTargetType.ControlTarget),
+            new DoBeginFollow<T>(),
+            new BTSelector<T>(new List<BTNode<T>>
+            {
+                new CheckTargetTooFarAway<T>(MoveToTargetType.ControlTarget),
+                new BTSequence<T>(new List<BTNode<T>>
+                {
+                    new CheckTargetTooClose<T>(MoveToTargetType.ControlTarget, 1),
+                    new DoClearPath<T>(),
+                }),
+                new BTSequence<T>(new List<BTNode<T>>
+                {
+                    new CheckPathExists<T>(),
+                    new DoFollowPath<T>(),
+                    new DoClearPath<T>()
+                }),
+                new DoMoveToTarget<T>(MoveToTargetType.ControlTarget, true),
+                new BTSequence<T>(new List<BTNode<T>>
+                {
+                    new DoCreatePath<T>(MoveToTargetType.ControlTarget),
+                    new DoFollowPath<T>(),
+                    new DoClearPath<T>()
+                }),
+            }),
+        });
+    }
+    
+    public static BTNode<T> DoCome()
+    {
+        return new BTSequence<T>(new List<BTNode<T>>
+        {
+            new CheckControlOrder<T>(OrderType.Come),
+            new CheckMoveTo<T>(MoveToTargetType.ControlMaster),
+            new BTInverter<T>(new CheckTargetTooFarAway<T>(MoveToTargetType.ControlMaster)),
+            new DoBeginCome<T>(),
+            new BTSelector<T>(new List<BTNode<T>>
+            {
+                new BTSequence<T>(new List<BTNode<T>>
+                {
+                    new CheckTargetTooClose<T>(MoveToTargetType.ControlMaster, 1),
+                    new DoClearPath<T>(),
+                }),
+                new BTSequence<T>(new List<BTNode<T>>
+                {
+                    new CheckPathExists<T>(),
+                    new DoFollowPath<T>(),
+                    new DoClearPath<T>()
+                }),
+                new DoMoveToTarget<T>(MoveToTargetType.ControlMaster, true),
+                new BTSequence<T>(new List<BTNode<T>>
+                {
+                    new DoCreatePath<T>(MoveToTargetType.ControlMaster),
+                    new DoFollowPath<T>(),
+                    new DoClearPath<T>()
+                }),
+            }),
+        });
+    }
+    
+    public static BTNode<T> DoStop()
+    {
+        return new BTSequence<T>(new List<BTNode<T>>
+        {
+            new CheckControlOrder<T>(OrderType.Stop),
+            new BTInverter<T>(new BTSucceeder<T>(new DoBeginStop<T>()))
+        });
+    }
+    
+    public static BTNode<T> DoStay()
+    {
+        return new BTSequence<T>(new List<BTNode<T>>
+        {
+            new CheckControlOrder<T>(OrderType.Stay),
+            new DoBeginStay<T>()
+        });
+    }
+    
+    public static BTNode<T> DoObey()
+    {
+        return new BTSelector<T>(new List<BTNode<T>>
+        {
+            DoAttack(),
+            DoFollow(),
+            DoCome(),
+            DoStop(),
+            DoStay(),
+            new DoWander<T>(3, 2, 1)
         });
     }
 
@@ -111,9 +229,14 @@ public class MeleeBT<T> : BaseSingleton<MeleeBT<T>>, IBTTree<T> where T : IAISta
                 }),
                 new BTSequence<T>(new List<BTNode<T>>
                 {
+                    new CheckControlled<T>(),
+                    DoObey()
+                }),
+                new BTSequence<T>(new List<BTNode<T>>
+                {
                     new BTInverter<T>(new CheckControlled<T>()),
                     DoThink()
-                }),
+                })
             })
         });
 

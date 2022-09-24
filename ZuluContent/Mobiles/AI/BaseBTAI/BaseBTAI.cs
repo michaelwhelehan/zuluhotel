@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Server.ContextMenus;
+using Server.Gumps;
 using Server.Items;
-using Server.Spells;
-using MoveImpl = Server.Movement.MovementImpl;
+using Server.Network;
+using Server.Targets;
 
 namespace Server.Mobiles;
 
@@ -13,7 +15,7 @@ public interface IAIState
     public bool IsGuarding { get; set; }
     public long NextStopGuard { get; set; }
     public PathFollower Path { get; set; }
-    public long NextMove { get; set; }
+    public OrderType LastControlOrder { get; set; }
 }
 
 public class AIState : IAIState
@@ -23,14 +25,14 @@ public class AIState : IAIState
     public bool IsGuarding { get; set; }
     public long NextStopGuard { get; set; }
     public PathFollower Path { get; set; }
-    public long NextMove { get; set; }
+    public OrderType LastControlOrder { get; set; }
 }
 
 public class BaseBTAI<T> where T : IAIState
 {
     private readonly Timer m_Timer;
     private IBTTree<T> BehaviorTree { get; }
-    
+
     private T State { get; }
 
     public BaseBTAI(T state, IBTTree<T> behaviorTree)
@@ -45,7 +47,8 @@ public class BaseBTAI<T> where T : IAIState
             activate = true;
         else if (World.Loading)
             activate = false;
-        else if (State.Creature.Map == null || State.Creature.Map == Map.Internal || !State.Creature.Map.GetSector(State.Creature.Location).Active)
+        else if (State.Creature.Map == null || State.Creature.Map == Map.Internal ||
+                 !State.Creature.Map.GetSector(State.Creature.Location).Active)
             activate = false;
         else
             activate = true;
@@ -65,7 +68,8 @@ public class BaseBTAI<T> where T : IAIState
             {
                 if (se.HomeLocation == Point3D.Zero)
                 {
-                    if (!State.Creature.Region.AcceptsSpawnsFrom(se.Region)) Timer.DelayCall(TimeSpan.Zero, ReturnToHome);
+                    if (!State.Creature.Region.AcceptsSpawnsFrom(se.Region))
+                        Timer.DelayCall(TimeSpan.Zero, ReturnToHome);
                 }
                 else if (!State.Creature.InRange(se.HomeLocation, se.HomeRange))
                 {
@@ -93,15 +97,6 @@ public class BaseBTAI<T> where T : IAIState
         m_Timer.Stop();
     }
 
-    public void OnAggressiveAction(Mobile aggressor)
-    {
-        var currentCombat = State.Creature.Combatant;
-
-        if (currentCombat != null && !aggressor.Hidden && currentCombat != aggressor &&
-            State.Creature.GetDistanceToSqrt(currentCombat) > State.Creature.GetDistanceToSqrt(aggressor))
-            State.Creature.Combatant = aggressor;
-    }
-
     private void ReturnToHome()
     {
         if (State.Creature.Spawner != null)
@@ -112,367 +107,693 @@ public class BaseBTAI<T> where T : IAIState
         }
     }
 
-    public static bool AcquireFocusMob(BaseCreature mobile, int iRange, FightMode acqType, bool bPlayerOnly,
-        bool bFacFriend,
-        bool bFacFoe)
+    public virtual void EndPickTarget(Mobile from, Mobile target, OrderType order)
     {
-        if (mobile.Deleted)
-            return false;
+        if (State.Creature.Deleted || !State.Creature.Controlled || !from.InRange(State.Creature, 14) ||
+            from.Map != State.Creature.Map ||
+            !from.CheckAlive())
+            return;
 
-        if (mobile.BardProvoked)
-        {
-            if (mobile.BardTarget == null || mobile.BardTarget.Deleted)
+        var isOwner = from == State.Creature.ControlMaster;
+        var isFriend = !isOwner && State.Creature.IsPetFriend(from);
+
+        if (!isOwner && !isFriend)
+            return;
+
+        if (isFriend && order != OrderType.Follow && order != OrderType.Stay && order != OrderType.Stop)
+            return;
+
+        if (order == OrderType.Attack)
+            if (target is BaseCreature { IsScaryToPets: true } && State.Creature.IsScaredOfScaryThings)
             {
-                mobile.FocusMob = null;
-                return false;
+                State.Creature.SayTo(from, "Your pet refuses to attack this creature!");
+                return;
             }
 
-            mobile.FocusMob = mobile.BardTarget;
-            return mobile.FocusMob != null;
-        }
-
-        if (mobile.Controlled)
+        if (State.Creature.CheckControlChance(from))
         {
-            if (mobile.ControlTarget == null || mobile.ControlTarget.Deleted || mobile.ControlTarget.Hidden ||
-                !mobile.ControlTarget.Alive ||
-                !mobile.InRange(mobile.ControlTarget, mobile.RangePerception * 2))
-            {
-                if (mobile.ControlTarget != null && mobile.ControlTarget != mobile.ControlMaster)
-                    mobile.ControlTarget = null;
-
-                mobile.FocusMob = null;
-                return false;
-            }
-
-            mobile.FocusMob = mobile.ControlTarget;
-            return mobile.FocusMob != null;
+            State.Creature.ControlTarget = target;
+            State.Creature.ControlOrder = order;
         }
+    }
 
-        if (mobile.ConstantFocus != null)
-        {
-            mobile.DebugSay("Acquired my constant focus");
-            mobile.FocusMob = mobile.ConstantFocus;
+    public bool HandlesOnSpeech(Mobile from)
+    {
+        if (from.AccessLevel >= AccessLevel.GameMaster)
             return true;
-        }
 
-        if (acqType == FightMode.None)
+        if (from.Alive && State.Creature.Controlled && State.Creature.Commandable &&
+            (from == State.Creature.ControlMaster || State.Creature.IsPetFriend(from)))
+            return true;
+
+        return from.Alive && from.InRange(State.Creature.Location, 3) && State.Creature.IsHumanInTown();
+    }
+
+    private static readonly SkillName[] m_KeywordTable =
+    {
+        SkillName.Parry,
+        SkillName.Healing,
+        SkillName.Hiding,
+        SkillName.Stealing,
+        SkillName.Alchemy,
+        SkillName.AnimalLore,
+        SkillName.ItemID,
+        SkillName.ArmsLore,
+        SkillName.Begging,
+        SkillName.Blacksmith,
+        SkillName.Fletching,
+        SkillName.Peacemaking,
+        SkillName.Camping,
+        SkillName.Carpentry,
+        SkillName.Cartography,
+        SkillName.Cooking,
+        SkillName.DetectHidden,
+        SkillName.Discordance, //??
+        SkillName.EvalInt,
+        SkillName.Fishing,
+        SkillName.Provocation,
+        SkillName.Lockpicking,
+        SkillName.Magery,
+        SkillName.MagicResist,
+        SkillName.Tactics,
+        SkillName.Snooping,
+        SkillName.RemoveTrap,
+        SkillName.Musicianship,
+        SkillName.Poisoning,
+        SkillName.Archery,
+        SkillName.SpiritSpeak,
+        SkillName.Tailoring,
+        SkillName.AnimalTaming,
+        SkillName.TasteID,
+        SkillName.Tinkering,
+        SkillName.Veterinary,
+        SkillName.Forensics,
+        SkillName.Herding,
+        SkillName.Tracking,
+        SkillName.Stealth,
+        SkillName.Inscribe,
+        SkillName.Swords,
+        SkillName.Macing,
+        SkillName.Fencing,
+        SkillName.Wrestling,
+        SkillName.Lumberjacking,
+        SkillName.Mining,
+        SkillName.Meditation
+    };
+
+    public virtual void BeginPickTarget(Mobile from, OrderType order)
+    {
+        if (State.Creature.Deleted || !State.Creature.Controlled || !from.InRange(State.Creature, 14) ||
+            from.Map != State.Creature.Map)
+            return;
+
+        var isOwner = from == State.Creature.ControlMaster;
+        var isFriend = !isOwner && State.Creature.IsPetFriend(from);
+
+        if (!isOwner && !isFriend)
+            return;
+
+        if (isFriend && order != OrderType.Follow && order != OrderType.Stay && order != OrderType.Stop)
+            return;
+
+        if (from.Target == null)
         {
-            mobile.FocusMob = null;
-            return false;
+            if (order == OrderType.Transfer)
+                from.SendLocalizedMessage(502038); // Click on the person to transfer ownership to.
+            else if (order == OrderType.Friend)
+                from.SendLocalizedMessage(502020); // Click on the player whom you wish to make a co-owner.
+            else if (order == OrderType.Unfriend)
+                from.SendLocalizedMessage(1070948); // Click on the player whom you wish to remove as a co-owner.
+
+            from.Target = new BTAIControlMobileTarget<T>(this, order);
         }
-
-        if (acqType == FightMode.Aggressor && mobile.Aggressors.Count == 0 && mobile.Aggressed.Count == 0)
+        else if (from.Target is BTAIControlMobileTarget<T>)
         {
-            mobile.FocusMob = null;
-            return false;
+            var t = (BTAIControlMobileTarget<T>)from.Target;
+
+            if (t.Order == order)
+                t.AddAI(this);
         }
+    }
+    
+    public virtual void OnBeforeCurrentOrderChanged()
+    {
+        if (State.Creature.Deleted || State.Creature.ControlMaster == null || State.Creature.ControlMaster.Deleted)
+            return;
+        
+        State.LastControlOrder = State.Creature.ControlOrder;
+    }
 
-        if (mobile.NextReacquireTime > Core.TickCount)
+    public void OnSpeech(SpeechEventArgs e)
+    {
+        if (e.Mobile.Alive && e.Mobile.InRange(State.Creature.Location, 3) && State.Creature.IsHumanInTown())
         {
-            mobile.FocusMob = null;
-            return false;
-        }
-
-        mobile.NextReacquireTime = Core.TickCount + (int)mobile.ReacquireDelay.TotalMilliseconds;
-
-        mobile.DebugSay("Acquiring...");
-
-        var map = mobile.Map;
-
-        if (map != null)
-        {
-            Mobile newFocusMob = null;
-            var val = double.MinValue;
-            double theirVal;
-
-            IPooledEnumerable eable = map.GetMobilesInRange(mobile.Location, iRange);
-
-            foreach (Mobile m in eable)
+            if (e.HasKeyword(0x9D) && WasNamed(e.Speech)) // *move*
             {
-                if (m.Deleted || m.Blessed)
-                    continue;
-
-                // Let's not target ourselves...
-                if (m == mobile)
-                    continue;
-
-                // We consider Familiars to be neutral
-                if (m is BaseCreature { AI: AIType.AI_Familiar })
-                    continue;
-
-                // Dead targets are invalid.
-                if (!m.Alive)
-                    continue;
-
-                // Staff members cannot be targeted.
-                if (m.AccessLevel > AccessLevel.Player)
-                    continue;
-
-                // Does it have to be a player?
-                if (bPlayerOnly && !m.Player)
-                    continue;
-
-                // Can't acquire a target we can't see.
-                if (!mobile.CanSee(m))
-                    continue;
-
-                if (mobile.Summoned && mobile.SummonMaster != null)
+                if (State.Creature.Combatant != null)
+                    // I am too busy fighting to deal with thee!
+                    State.Creature.PublicOverheadMessage(MessageType.Regular, 0x3B2, 501482);
+                else
+                    // Excuse me?
+                    State.Creature.PublicOverheadMessage(MessageType.Regular, 0x3B2, 501516);
+            }
+            else if (e.HasKeyword(0x9E) && WasNamed(e.Speech)) // *time*
+            {
+                if (State.Creature.Combatant != null)
                 {
-                    // If this is a summon, it can't target its controller.
-                    if (m == mobile.SummonMaster)
-                        continue;
-
-                    // It also must abide by harmful spell rules.
-                    if (!SpellHelper.ValidIndirectTarget(mobile.SummonMaster, m))
-                        continue;
-                }
-
-                // If we only want faction friends, make sure it's one.
-                if (bFacFriend && !mobile.IsFriend(m))
-                    continue;
-
-                if (acqType == FightMode.Aggressor || acqType == FightMode.Evil)
-                {
-                    var bValid = IsHostile(mobile, m);
-
-                    if (acqType == FightMode.Evil && !bValid)
-                    {
-                        if (m is BaseCreature && ((BaseCreature)m).Controlled &&
-                            ((BaseCreature)m).ControlMaster != null)
-                            bValid = ((BaseCreature)m).ControlMaster.Karma < 0;
-                        else
-                            bValid = m.Karma < 0;
-                    }
-
-                    if (!bValid)
-                        continue;
+                    // I am too busy fighting to deal with thee!
+                    State.Creature.PublicOverheadMessage(MessageType.Regular, 0x3B2, 501482);
                 }
                 else
                 {
-                    // Same goes for faction enemies.
-                    if (bFacFoe && !mobile.IsEnemy(m))
-                        continue;
+                    int generalNumber;
+                    string exactTime;
 
-                    // If it's an enemy factioned mobile, make sure we can be harmful to it.
-                    if (bFacFoe && !bFacFriend && !mobile.CanBeHarmful(m, false))
-                        continue;
-                }
+                    Clock.GetTime(State.Creature, out generalNumber, out exactTime);
 
-                theirVal = mobile.GetFightModeRanking(m, acqType, bPlayerOnly);
-
-                if (theirVal > val && mobile.InLOS(m))
-                {
-                    newFocusMob = m;
-                    val = theirVal;
+                    State.Creature.PublicOverheadMessage(MessageType.Regular, 0x3B2, generalNumber);
                 }
             }
-
-            eable.Free();
-
-            mobile.FocusMob = newFocusMob;
-        }
-
-        var focusedMob = mobile.FocusMob != null;
-
-        if (mobile.Hidden && focusedMob)
-            Timer.StartTimer(TimeSpan.FromMilliseconds(100), () => AlertUnhidden(mobile));
-
-        return focusedMob;
-    }
-
-    public static bool IsHostile(Mobile to, Mobile from)
-    {
-        var count = Math.Max(to.Aggressors.Count, to.Aggressed.Count);
-
-        if (to.Combatant == from || from.Combatant == to) return true;
-
-        if (count > 0)
-            for (var a = 0; a < count; ++a)
+            else if (e.HasKeyword(0x6C)) // *train
             {
-                if (a < to.Aggressed.Count && to.Aggressed[a].Attacker == from) return true;
-
-                if (a < to.Aggressors.Count && to.Aggressors[a].Defender == from) return true;
-            }
-
-        return false;
-    }
-
-    public static void AlertUnhidden(Mobile mobile)
-    {
-        mobile.Say($"*{mobile.Name} springs out from hiding!*");
-    }
-
-    private static readonly Queue<Item> Obstacles = new();
-
-    public static bool CheckMove(long nextMove)
-    {
-        return Core.TickCount - nextMove >= 0;
-    }
-
-    public static double TransformMoveDelay(BaseCreature mobile, double delay)
-    {
-        if (mobile is { Controlled: false, Summoned: false } &&
-            Math.Abs(delay - mobile.PassiveSpeed) < 0.0001) delay *= 3;
-
-        var stats = mobile.Hits;
-        var statsMax = mobile.HitsMax;
-
-        var offset = statsMax <= 0 ? 1.0 : Math.Max(0, stats) / (double)statsMax;
-
-        if (offset < 1.0) delay += mobile.PassiveSpeed * (1.0 - offset);
-
-        return delay;
-    }
-
-    public static MoveResult DoMoveImpl(BaseCreature mobile, Direction d, ref long nextMove)
-    {
-        if (mobile.Deleted || mobile.Frozen || mobile.Paralyzed ||
-            mobile.Spell?.IsCasting == true || mobile.DisallowAllMoves)
-            return MoveResult.BadState;
-
-        if (!CheckMove(nextMove)) return MoveResult.BadState;
-
-        // This makes them always move one step, never any direction changes
-        // TODO: This is firing off deltas which aren't needed. Look into replacing/removing this
-        mobile.Direction = d;
-
-        var delay = (int)(TransformMoveDelay(mobile, mobile.CurrentSpeed) * 1000);
-        nextMove += delay;
-
-        if (Core.TickCount - nextMove > 0) nextMove = Core.TickCount;
-
-        mobile.Pushing = false;
-
-        MoveImpl.IgnoreMovableImpassables = mobile.CanMoveOverObstacles && !mobile.CanDestroyObstacles;
-
-        if ((mobile.Direction & Direction.Mask) != (d & Direction.Mask))
-        {
-            var v = mobile.Move(d);
-
-            MoveImpl.IgnoreMovableImpassables = false;
-            return v ? MoveResult.Success : MoveResult.Blocked;
-        }
-
-        if (mobile.Move(d))
-        {
-            MoveImpl.IgnoreMovableImpassables = false;
-            return MoveResult.Success;
-        }
-
-        var wasPushing = mobile.Pushing;
-
-        var blocked = true;
-
-        var canOpenDoors = mobile.CanOpenDoors;
-        var canDestroyObstacles = mobile.CanDestroyObstacles;
-
-        if (canOpenDoors || canDestroyObstacles)
-        {
-            if (mobile.Debug) mobile.DebugSay("My movement was blocked, I will try to clear some obstacles.");
-
-            var map = mobile.Map;
-
-            if (map != null)
-            {
-                int x = mobile.X, y = mobile.Y;
-                Movement.Movement.Offset(d, ref x, ref y);
-
-                var destroyables = 0;
-
-                var eable = map.GetItemsInRange(new Point3D(x, y, mobile.Location.Z), 1);
-
-                foreach (var item in eable)
-                    if (canOpenDoors && item is BaseDoor door && door.Z + door.ItemData.Height > mobile.Z &&
-                        mobile.Z + 16 > door.Z)
-                    {
-                        if (door.X != x || door.Y != y) continue;
-
-                        if (!door.Locked || !door.UseLocks()) Obstacles.Enqueue(door);
-
-                        if (!canDestroyObstacles) break;
-                    }
-                    else if (canDestroyObstacles && item.Movable && item.ItemData.Impassable &&
-                             item.Z + item.ItemData.Height > mobile.Z && mobile.Z + 16 > item.Z)
-                    {
-                        if (!mobile.InRange(item.GetWorldLocation(), 1)) continue;
-
-                        Obstacles.Enqueue(item);
-                        ++destroyables;
-                    }
-
-                eable.Free();
-
-                if (destroyables > 0) Effects.PlaySound(new Point3D(x, y, mobile.Z), mobile.Map, 0x3B3);
-
-                if (Obstacles.Count > 0) blocked = false; // retry movement
-
-                while (Obstacles.Count > 0)
+                if (State.Creature.Combatant != null)
                 {
-                    var item = Obstacles.Dequeue();
+                    // I am too busy fighting to deal with thee!
+                    State.Creature.PublicOverheadMessage(MessageType.Regular, 0x3B2, 501482);
+                }
+                else
+                {
+                    var foundSomething = false;
 
-                    if (item is BaseDoor door)
+                    var ourSkills = State.Creature.Skills;
+                    var theirSkills = e.Mobile.Skills;
+
+                    for (var i = 0; i < ourSkills.Length && i < theirSkills.Length; ++i)
                     {
-                        if (mobile.Debug)
-                            mobile.DebugSay(
-                                "Little do they expect, I've learned how to open doors. Didn't they read the script??"
-                            );
+                        var skill = ourSkills[i];
+                        var theirSkill = theirSkills[i];
 
-                        if (mobile.Debug) mobile.DebugSay("*twist*");
+                        if (skill != null && theirSkill != null && skill.Base >= 60.0 &&
+                            State.Creature.CheckTeach(skill.SkillName, e.Mobile))
+                        {
+                            var toTeach = skill.Base / 3.0;
 
-                        door.Use(mobile);
+                            if (toTeach > 42.0)
+                                toTeach = 42.0;
+
+                            if (toTeach > theirSkill.Base)
+                            {
+                                var number = 1043059 + i;
+
+                                if (number > 1043107)
+                                    continue;
+
+                                if (!foundSomething)
+                                    State.Creature.Say(1043058); // I can train the following:
+
+                                State.Creature.Say(number);
+
+                                foundSomething = true;
+                            }
+                        }
+                    }
+
+                    if (!foundSomething)
+                        State.Creature.Say(501505); // Alas, I cannot teach thee anything.
+                }
+            }
+            else
+            {
+                var toTrain = (SkillName)(-1);
+
+                for (var i = 0; toTrain == (SkillName)(-1) && i < e.Keywords.Length; ++i)
+                {
+                    var keyword = e.Keywords[i];
+
+                    if (keyword == 0x154)
+                    {
+                        toTrain = SkillName.Anatomy;
+                    }
+                    else if (keyword >= 0x6D && keyword <= 0x9C)
+                    {
+                        var index = keyword - 0x6D;
+
+                        if (index >= 0 && index < m_KeywordTable.Length)
+                            toTrain = m_KeywordTable[index];
+                    }
+                }
+
+                if (toTrain != (SkillName)(-1))
+                {
+                    if (State.Creature.Combatant != null)
+                    {
+                        // I am too busy fighting to deal with thee!
+                        State.Creature.PublicOverheadMessage(MessageType.Regular, 0x3B2, 501482);
                     }
                     else
                     {
-                        if (mobile.Debug)
-                            mobile.DebugSay(
-                                $"Ugabooga. I'm so big and tough I can destroy it: {item.GetType().Name}"
-                            );
+                        var skills = State.Creature.Skills;
+                        var skill = skills[toTrain];
 
-                        if (item is Container cont)
+                        if (skill == null || skill.Base < 60.0 || !State.Creature.CheckTeach(toTrain, e.Mobile))
+                            State.Creature.Say(501507); // 'Tis not something I can teach thee of.
+                        else
+                            State.Creature.Teach(toTrain, e.Mobile, 0, false);
+                    }
+                }
+            }
+        }
+
+        if (State.Creature.Controlled && State.Creature.Commandable)
+        {
+            State.Creature.DebugSay("Listening...");
+
+            var isOwner = e.Mobile == State.Creature.ControlMaster;
+            var isFriend = !isOwner && State.Creature.IsPetFriend(e.Mobile);
+
+            if (e.Mobile.Alive && (isOwner || isFriend))
+            {
+                State.Creature.DebugSay("It's from my master");
+
+                var keywords = e.Keywords;
+                var speech = e.Speech;
+
+                // First, check the all*
+                for (var i = 0; i < keywords.Length; ++i)
+                {
+                    var keyword = keywords[i];
+
+                    switch (keyword)
+                    {
+                        case 0x164: // all come
                         {
-                            for (var i = 0; i < cont.Items.Count; ++i)
-                            {
-                                var check = cont.Items[i];
+                            if (!isOwner)
+                                break;
 
-                                if (check.Movable && check.ItemData.Impassable &&
-                                    cont.Z + check.ItemData.Height > mobile.Z)
-                                    Obstacles.Enqueue(check);
+                            if (State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Come;
                             }
 
-                            cont.Destroy();
+                            return;
                         }
-                        else
+                        case 0x165: // all follow
                         {
-                            item.Delete();
+                            BeginPickTarget(e.Mobile, OrderType.Follow);
+                            return;
+                        }
+                        case 0x166: // all guard
+                        case 0x16B: // all guard me
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Guard;
+                            }
+
+                            return;
+                        }
+                        case 0x167: // all stop
+                        {
+                            if (State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Stop;
+                            }
+
+                            return;
+                        }
+                        case 0x168: // all kill
+                        case 0x169: // all attack
+                        {
+                            if (!isOwner)
+                                break;
+
+                            BeginPickTarget(e.Mobile, OrderType.Attack);
+                            return;
+                        }
+                        case 0x16C: // all follow me
+                        {
+                            if (State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = e.Mobile;
+                                State.Creature.ControlOrder = OrderType.Follow;
+                            }
+
+                            return;
+                        }
+                        case 0x170: // all stay
+                        {
+                            if (State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Stay;
+                            }
+
+                            return;
                         }
                     }
                 }
 
-                if (!blocked) blocked = !mobile.Move(d);
-            }
-        }
-
-        if (blocked)
-        {
-            var offset = Utility.RandomDouble() >= 0.6 ? 1 : -1;
-
-            for (var i = 0; i < 2; ++i)
-            {
-                mobile.TurnInternal(offset);
-
-                if (mobile.Move(mobile.Direction))
+                // No all*, so check *command
+                for (var i = 0; i < keywords.Length; ++i)
                 {
-                    MoveImpl.IgnoreMovableImpassables = false;
-                    return MoveResult.SuccessAutoTurn;
+                    var keyword = keywords[i];
+
+                    switch (keyword)
+                    {
+                        case 0x155: // *come
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Come;
+                            }
+
+                            return;
+                        }
+                        case 0x156: // *drop
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (!State.Creature.Summoned && WasNamed(speech) &&
+                                State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Drop;
+                            }
+
+                            return;
+                        }
+                        case 0x15A: // *follow
+                        {
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                                BeginPickTarget(e.Mobile, OrderType.Follow);
+
+                            return;
+                        }
+                        case 0x15B: // *friend
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                if (State.Creature.Summoned || State.Creature.SpellBound)
+                                    e.Mobile.SendLocalizedMessage(
+                                        1005481); // Summoned creatures are loyal only to their summoners.
+                                else if (e.Mobile.HasTrade)
+                                    e.Mobile.SendLocalizedMessage(
+                                        1070947); // You cannot friend a pet with a trade pending
+                                else
+                                    BeginPickTarget(e.Mobile, OrderType.Friend);
+                            }
+
+                            return;
+                        }
+                        case 0x15C: // *guard
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Guard;
+                            }
+
+                            return;
+                        }
+                        case 0x15D: // *kill
+                        case 0x15E: // *attack
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                                BeginPickTarget(e.Mobile, OrderType.Attack);
+
+                            return;
+                        }
+                        case 0x15F: // *patrol
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Patrol;
+                            }
+
+                            return;
+                        }
+                        case 0x161: // *stop
+                        {
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Stop;
+                            }
+
+                            return;
+                        }
+                        case 0x163: // *follow me
+                        {
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = e.Mobile;
+                                State.Creature.ControlOrder = OrderType.Follow;
+                            }
+
+                            return;
+                        }
+                        case 0x16D: // *release
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                if (!State.Creature.Summoned)
+                                {
+                                    e.Mobile.SendGump(new ConfirmReleaseGump(e.Mobile, State.Creature));
+                                }
+                                else
+                                {
+                                    State.Creature.ControlTarget = null;
+                                    State.Creature.ControlOrder = OrderType.Release;
+                                }
+                            }
+
+                            return;
+                        }
+                        case 0x16E: // *transfer
+                        {
+                            if (!isOwner)
+                                break;
+
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                if (State.Creature.Summoned || State.Creature.SpellBound)
+                                    e.Mobile.SendLocalizedMessage(
+                                        1005487); // You cannot transfer ownership of a summoned creature.
+                                else if (e.Mobile.HasTrade)
+                                    e.Mobile.SendLocalizedMessage(
+                                        1010507); // You cannot transfer a pet with a trade pending
+                                else
+                                    BeginPickTarget(e.Mobile, OrderType.Transfer);
+                            }
+
+                            return;
+                        }
+                        case 0x16F: // *stay
+                        {
+                            if (WasNamed(speech) && State.Creature.CheckControlChance(e.Mobile))
+                            {
+                                State.Creature.ControlTarget = null;
+                                State.Creature.ControlOrder = OrderType.Stay;
+                            }
+
+                            return;
+                        }
+                    }
                 }
             }
+        }
+        else
+        {
+            if (e.Mobile.AccessLevel >= AccessLevel.GameMaster)
+            {
+                State.Creature.DebugSay("It's from a GM");
 
-            MoveImpl.IgnoreMovableImpassables = false;
-            return wasPushing ? MoveResult.BadState : MoveResult.Blocked;
+                if (State.Creature.FindMyName(e.Speech, true))
+                {
+                    var str = e.Speech.Split(' ');
+                    int i;
+
+                    for (i = 0; i < str.Length; i++)
+                    {
+                        var word = str[i];
+
+                        if (Equals(word, "obey"))
+                        {
+                            State.Creature.SetControlMaster(e.Mobile);
+
+                            if (State.Creature.Summoned)
+                                State.Creature.SummonMaster = e.Mobile;
+
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    public void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
+        {
+            if (from.Alive && State.Creature.Controlled && from.InRange(State.Creature, 14))
+            {
+                if (from == State.Creature.ControlMaster)
+                {
+                    list.Add(new InternalEntry(from, 6107, 14, State.Creature, this, OrderType.Guard));  // Command: Guard
+                    list.Add(new InternalEntry(from, 6108, 14, State.Creature, this, OrderType.Follow)); // Command: Follow
+
+                    if (State.Creature.CanDrop)
+                    {
+                        list.Add(new InternalEntry(from, 6109, 14, State.Creature, this, OrderType.Drop)); // Command: Drop
+                    }
+
+                    list.Add(new InternalEntry(from, 6111, 14, State.Creature, this, OrderType.Attack)); // Command: Kill
+
+                    list.Add(new InternalEntry(from, 6112, 14, State.Creature, this, OrderType.Stop)); // Command: Stop
+                    list.Add(new InternalEntry(from, 6114, 14, State.Creature, this, OrderType.Stay)); // Command: Stay
+
+                    if (!State.Creature.Summoned)
+                    {
+                        list.Add(new InternalEntry(from, 6110, 14, State.Creature, this, OrderType.Friend));   // Add Friend
+                        list.Add(new InternalEntry(from, 6099, 14, State.Creature, this, OrderType.Unfriend)); // Remove Friend
+                        list.Add(new InternalEntry(from, 6113, 14, State.Creature, this, OrderType.Transfer)); // Transfer
+                    }
+
+                    list.Add(new InternalEntry(from, 6118, 14, State.Creature, this, OrderType.Release)); // Release
+                }
+                else if (State.Creature.IsPetFriend(from))
+                {
+                    list.Add(new InternalEntry(from, 6108, 14, State.Creature, this, OrderType.Follow)); // Command: Follow
+                    list.Add(new InternalEntry(from, 6112, 14, State.Creature, this, OrderType.Stop));   // Command: Stop
+                    list.Add(new InternalEntry(from, 6114, 14, State.Creature, this, OrderType.Stay));   // Command: Stay
+                }
+            }
         }
 
-        MoveImpl.IgnoreMovableImpassables = false;
-        return MoveResult.Success;
+    public bool WasNamed(string speech)
+    {
+        var name = State.Creature.Name;
+
+        return name != null && speech.InsensitiveStartsWith(name);
+    }
+    
+    private class InternalEntry : ContextMenuEntry
+    {
+        private readonly BaseBTAI<T> m_AI;
+        private readonly Mobile m_From;
+        private readonly BaseCreature m_Mobile;
+        private readonly OrderType m_Order;
+
+        public InternalEntry(Mobile from, int number, int range, BaseCreature mobile, BaseBTAI<T> ai, OrderType order)
+            : base(number, range)
+        {
+            m_From = from;
+            m_Mobile = mobile;
+            m_AI = ai;
+            m_Order = order;
+
+            if (!mobile.Alive && (order == OrderType.Guard || order == OrderType.Attack ||
+                                     order == OrderType.Transfer || order == OrderType.Drop))
+            {
+                Enabled = false;
+            }
+        }
+
+        public override void OnClick()
+        {
+            if (!m_Mobile.Deleted && m_Mobile.Controlled && m_From.CheckAlive())
+            {
+                if (!m_Mobile.Alive && (m_Order == OrderType.Guard || m_Order == OrderType.Attack ||
+                                           m_Order == OrderType.Transfer || m_Order == OrderType.Drop))
+                {
+                    return;
+                }
+
+                var isOwner = m_From == m_Mobile.ControlMaster;
+                var isFriend = !isOwner && m_Mobile.IsPetFriend(m_From);
+
+                if (!isOwner && !isFriend)
+                {
+                    return;
+                }
+
+                if (isFriend && m_Order != OrderType.Follow && m_Order != OrderType.Stay && m_Order != OrderType.Stop)
+                {
+                    return;
+                }
+
+                switch (m_Order)
+                {
+                    case OrderType.Follow:
+                    case OrderType.Attack:
+                    case OrderType.Transfer:
+                    case OrderType.Friend:
+                    case OrderType.Unfriend:
+                        {
+                            if (m_Order == OrderType.Transfer && m_From.HasTrade)
+                            {
+                                m_From.SendLocalizedMessage(1010507); // You cannot transfer a pet with a trade pending
+                            }
+                            else if (m_Order == OrderType.Friend && m_From.HasTrade)
+                            {
+                                m_From.SendLocalizedMessage(1070947); // You cannot friend a pet with a trade pending
+                            }
+                            else
+                            {
+                                m_AI.BeginPickTarget(m_From, m_Order);
+                            }
+
+                            break;
+                        }
+                    case OrderType.Release:
+                        {
+                            if (m_Mobile.Summoned)
+                            {
+                                goto default;
+                            }
+
+                            m_From.SendGump(new ConfirmReleaseGump(m_From, m_Mobile));
+
+                            break;
+                        }
+                    default:
+                        {
+                            if (m_Mobile.CheckControlChance(m_From))
+                            {
+                                m_Mobile.ControlOrder = m_Order;
+                            }
+
+                            break;
+                        }
+                }
+            }
+        }
     }
 
     private class AITimer<T> : Timer where T : IAIState
