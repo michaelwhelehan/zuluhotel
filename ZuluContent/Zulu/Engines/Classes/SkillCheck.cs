@@ -161,6 +161,8 @@ namespace Scripts.Zulu.Engines.Classes
 
             points = (int) (points * GetSkillPointsMultiplier(from, skillName));
 
+            points *= ZhConfig.Skills.PointsMultiplier;
+
             if (from is PlayerMobile { IsInPowerHour: true })
             {
                 points *= 3;

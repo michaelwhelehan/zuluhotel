@@ -12,6 +12,11 @@ public class DoBeginCombat<T> : BTNode<T> where T : IAIState
 
         treeState.InCombat = true;
 
+        if (treeState.CombatStartTime == 0)
+        {
+            treeState.CombatStartTime = Core.TickCount;
+        }
+
         treeState.Creature.DebugSay("Beginning combat");
         
         return NodeState.SUCCESS;

@@ -10,7 +10,7 @@ public class DoBeginFollow<T> : BTNode<T> where T : IAIState
         {
             treeState.Creature.Warmode = false;
             treeState.Creature.Combatant = null;
-            treeState.Creature.CurrentSpeed = treeState.Creature.ActiveSpeed;
+            treeState.Creature.CurrentSpeed = 0.01;
 
             treeState.Creature.DebugSay("Beginning follow");
             

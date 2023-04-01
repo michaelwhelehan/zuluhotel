@@ -4,11 +4,13 @@ public class DoMoveToTarget<T> : BTNode<T> where T : IAIState
 {
     private readonly MoveToTargetType m_MoveToTarget;
     private readonly bool m_BadStateOk;
-    
-    public DoMoveToTarget(MoveToTargetType moveToTarget, bool badStateOk)
+    private readonly bool m_InvertMovement;
+
+    public DoMoveToTarget(MoveToTargetType moveToTarget, bool badStateOk, bool invertMovement = false)
     {
         m_MoveToTarget = moveToTarget;
         m_BadStateOk = badStateOk;
+        m_InvertMovement = invertMovement;
     }
 
     public override NodeState Evaluate(T treeState)
@@ -20,28 +22,20 @@ public class DoMoveToTarget<T> : BTNode<T> where T : IAIState
             MoveToTargetType.ControlMaster => treeState.Creature.ControlMaster,
             _ => treeState.Creature.Combatant
         };
-        
+
         treeState.Creature.DebugSay("Trying to move to my target");
 
-        var res = treeState.Creature.DoMoveImpl(treeState.Creature.GetDirectionTo(target));
+        var dirTo = m_InvertMovement
+            ? target.GetDirectionTo(treeState.Creature)
+            : treeState.Creature.GetDirectionTo(target);
+
+        var res = treeState.Creature.DoMoveImpl(dirTo);
 
         var success = res == MoveResult.Success || res == MoveResult.SuccessAutoTurn ||
                       m_BadStateOk && res == MoveResult.BadState;
 
-        /*if (success && (m_Mobile.Controlled || m_Mobile.Summoned) && m_Mobile.ControlOrder is OrderType.Come or OrderType.Follow)
-        {
-            var master = m_Mobile.GetMaster();
-            if (master != null && m_Mobile.GetDistanceToSqrt(master) > 4)
-            {
-                m_Mobile.MoveToWorld(master.Location, master.Map);
-            }
-        }*/
+        if (success) return NodeState.SUCCESS;
 
-        if (success)
-        {
-            return NodeState.SUCCESS;
-        }
-        
         return NodeState.FAILURE;
     }
 }

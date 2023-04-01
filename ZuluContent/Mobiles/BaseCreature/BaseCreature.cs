@@ -1528,13 +1528,21 @@ namespace Server.Mobiles
                 BTAIObject = new BaseBTAI<AIState>(state, MeleeBT<AIState>.Instance);
                 return;
             }
+            
+            if (newAi == AIType.AI_Archer)
+            {
+                var state = new AIState { Creature = this };
+                
+                BTAIObject = new BaseBTAI<AIState>(state, RangedBT<AIState>.Instance);
+                return;
+            }
 
             AIObject = newAi switch
             {
                 // AIType.AI_Melee => new MeleeAI(this),
                 AIType.AI_Animal => new AnimalAI(this),
                 AIType.AI_Berserk => new BerserkAI(this),
-                AIType.AI_Archer => new ArcherAI(this),
+                // AIType.AI_Archer => new ArcherAI(this),
                 AIType.AI_Healer => new HealerAi(this),
                 AIType.AI_Vendor => new VendorAI(this),
                 AIType.AI_Mage => new MageAI(this),
@@ -2477,6 +2485,15 @@ namespace Server.Mobiles
 
             if (Core.TickCount - NextMove > 0)
                 NextMove = Core.TickCount;
+            
+            if ((Controlled || Summoned) && ControlOrder is OrderType.Come or OrderType.Follow)
+            {
+                var master = GetMaster();
+                if (master != null && GetDistanceToSqrt(master) > 4)
+                {
+                    MoveToWorld(master.Location, master.Map);
+                }
+            }
 
             Pushing = false;
 
@@ -3272,6 +3289,27 @@ namespace Server.Mobiles
             }
 
             LootGenerator.MakeLoot(LastKiller, backpack, table, LootItemLevel, LootItemChance);
+
+            foreach (var item in backpack.Items)
+            {
+                if (item is Gold { Amount: > 1000 })
+                {
+                    Timer.DelayCall(TimeSpan.FromMilliseconds(1000), () =>
+                    {
+                        LastKiller.PlaySound(0x037);
+                    });
+                    break;
+                }
+                
+                if (item is BaseEquippableItem { GearScore: >= 5 } or IGMItem)
+                {
+                    Timer.DelayCall(TimeSpan.FromMilliseconds(1500), () =>
+                    {
+                        LastKiller.PlaySound(0x5AA);
+                    });
+                    break;
+                }
+            }
         }
 
         public bool PackArmor(int minLevel, int maxLevel)

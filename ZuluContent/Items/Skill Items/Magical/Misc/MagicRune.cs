@@ -72,7 +72,7 @@ public partial class MagicHealingRune : MagicRune
 
             foreach (var mobile in mobiles)
             {
-                if (mobile is not PlayerMobile)
+                if (mobile is not PlayerMobile || !mobile.InLOS(m_Rune))
                 {
                     continue;
                 }
@@ -119,7 +119,7 @@ public partial class MagicDamageRune : MagicRune
 
             foreach (var mobile in mobiles)
             {
-                if (mobile is PlayerMobile)
+                if (mobile is PlayerMobile || !mobile.InLOS(m_Rune))
                 {
                     continue;
                 }

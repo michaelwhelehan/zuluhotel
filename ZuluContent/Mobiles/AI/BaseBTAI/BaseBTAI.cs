@@ -12,8 +12,11 @@ public interface IAIState
 {
     public BaseCreature Creature { get; }
     public bool InCombat { get; set; }
+    public long CombatStartTime { get; set; }
     public bool IsGuarding { get; set; }
+    public bool IsFleeing { get; set; }
     public long NextStopGuard { get; set; }
+    public long NextStopFlee { get; set; }
     public PathFollower Path { get; set; }
     public OrderType LastControlOrder { get; set; }
 }
@@ -22,8 +25,11 @@ public class AIState : IAIState
 {
     public BaseCreature Creature { get; init; }
     public bool InCombat { get; set; }
+    public long CombatStartTime { get; set; }
     public bool IsGuarding { get; set; }
+    public bool IsFleeing { get; set; }
     public long NextStopGuard { get; set; }
+    public long NextStopFlee { get; set; }
     public PathFollower Path { get; set; }
     public OrderType LastControlOrder { get; set; }
 }
