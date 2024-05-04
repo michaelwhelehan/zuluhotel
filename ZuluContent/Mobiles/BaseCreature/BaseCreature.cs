@@ -3289,27 +3289,6 @@ namespace Server.Mobiles
             }
 
             LootGenerator.MakeLoot(LastKiller, backpack, table, LootItemLevel, LootItemChance);
-
-            foreach (var item in backpack.Items)
-            {
-                if (item is Gold { Amount: > 1000 })
-                {
-                    Timer.DelayCall(TimeSpan.FromMilliseconds(1000), () =>
-                    {
-                        LastKiller.PlaySound(0x037);
-                    });
-                    break;
-                }
-                
-                if (item is BaseEquippableItem { GearScore: >= 5 } or IGMItem)
-                {
-                    Timer.DelayCall(TimeSpan.FromMilliseconds(1500), () =>
-                    {
-                        LastKiller.PlaySound(0x5AA);
-                    });
-                    break;
-                }
-            }
         }
 
         public bool PackArmor(int minLevel, int maxLevel)

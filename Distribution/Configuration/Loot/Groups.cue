@@ -1100,6 +1100,12 @@ import (
 			Chance:      1
 			Value:       "GoldRing"
 		},
+		{
+			MinQuantity: 1
+			MaxQuantity: 1
+			Chance:      0.1
+			Value:       "PowerCombineBeads"
+		}
 	]
 
 	Junk: [
