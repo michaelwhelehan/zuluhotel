@@ -3296,4 +3296,603 @@ Spells: {
 			Amount:  1
 		}]
 	}
+	FireSerpent: {
+        Type:             "FireSerpentSpell"
+        Name:             "Fire Serpent"
+        Mantra:           "Vas An Serpentis Flam"
+        Circle:           "Lower 1st Circle of Forgotten spells"
+        DamageType:       "Fire"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Harmful"
+        }
+        ReagentCosts: [{
+            Reagent: "Bloodspawn"
+            Amount:  1
+        }, {
+            Reagent: "Blackmoor"
+            Amount:  1
+        }, {
+            Reagent: "Bone"
+            Amount:  1
+        }]
+    }
+    ThorsHammer: {
+        Type:             "ThorsHammerSpell"
+        Name:             "Thor's Hammer"
+        Mantra:           "Corp Por Ylem"
+        Circle:           "Lower 1st Circle of Forgotten spells"
+        DamageType:       "Air"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Harmful"
+        }
+        ReagentCosts: [{
+            Reagent: "Pumice"
+            Amount:  1
+        }, {
+            Reagent: "PigIron"
+            Amount:  1
+        }]
+    }
+    EnergySphere: {
+        Type:             "EnergySphereSpell"
+        Name:             "Energy Sphere"
+        Mantra:           "Corp Por Grav"
+        Circle:           "Lower 1st Circle of Forgotten spells"
+        DamageType:       "Air"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Harmful"
+        }
+        ReagentCosts: [{
+            Reagent: "VialOfBlood"
+            Amount:  1
+        }, {
+            Reagent: "VolcanicAsh"
+            Amount:  1
+        }, {
+            Reagent: "DaemonBone"
+            Amount:  1
+        }]
+    }
+    ChaoticFlux: {
+        Type:             "ChaoticFluxSpell"
+        Name:             "Chaotic Flux"
+        Mantra:           "Kal Vas An Flam"
+        Circle:           "Lower 1st Circle of Forgotten spells"
+        DamageType:       "Fire"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   true
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Harmful"
+        }
+        ReagentCosts: [{
+            Reagent: "ExecutionersCap"
+            Amount:  1
+        }, {
+            Reagent: "Brimstone"
+            Amount:  1
+        }, {
+            Reagent: "DaemonBone"
+            Amount:  1
+        }]
+    }
+    WindOfAmnesia: {
+        Type:             "WindOfAmnesiaSpell"
+        Name:             "Wind of Amnesia"
+        Mantra:           "In Vas Mani Hur"
+        Circle:           "Higher 1st Circle of Forgotten spells"
+        DamageType:       "Air"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Harmful"
+        }
+        ReagentCosts: [{
+            Reagent: "Brimstone"
+            Amount:  1
+        }, {
+            Reagent: "Obsidian"
+            Amount:  1
+        }, {
+            Reagent: "VolcanicAsh"
+            Amount:  1
+        }, {
+            Reagent: "DaemonBone"
+            Amount:  1
+        }]
+    }
+    MassAttack: {
+        Type:             "MassAttackSpell"
+        Name:             "Mass Attack"
+        Mantra:           "Vas Rel Ort"
+        Circle:           "Higher 1st Circle of Forgotten spells"
+        DamageType:       "Fire"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Harmful"
+        }
+        ReagentCosts: [{
+            Reagent: "FertileDirt"
+            Amount:  1
+        }, {
+            Reagent: "VialOfBlood"
+            Amount:  1
+        }, {
+            Reagent: "Bone"
+            Amount:  1
+        }, {
+            Reagent: "Obsidian"
+            Amount:  1
+        }]
+    }
+    ChantOfLife: {
+        Type:             "ChantOfLifeSpell"
+        Name:             "Chant of Life"
+        Mantra:           "In Vas Mani Corp"
+        Circle:           "Higher 1st Circle of Forgotten spells"
+        DamageType:       "None"
+        RightHandEffect:  0
+        LeftHandEffect:   0
+        Action:           16
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Beneficial"
+        }
+        ReagentCosts: [{
+            Reagent: "ExecutionersCap"
+            Amount:  1
+        }, {
+            Reagent: "Bloodspawn"
+            Amount:  1
+        }, {
+            Reagent: "WyrmsHeart"
+            Amount:  1
+        }, {
+            Reagent: "Bone"
+            Amount:  1
+        }]
+    }
+    ChantOfEnhance: {
+        Type:             "ChantOfEnhanceSpell"
+        Name:             "Chant of Enhance"
+        Mantra:           "Vas Rel Sanct"
+        Circle:           "Higher 1st Circle of Forgotten spells"
+        DamageType:       "None"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Beneficial"
+        }
+        ReagentCosts: [{
+            Reagent: "Pumice"
+            Amount:  1
+        }, {
+            Reagent: "Obsidian"
+            Amount:  1
+        }, {
+            Reagent: "Bone"
+            Amount:  1
+        }, {
+            Reagent: "Blackmoor"
+            Amount:  1
+        }]
+    }
+    PoisonCloud: {
+        Type:             "PoisonCloudSpell"
+        Name:             "Poison Cloud"
+        Mantra:           "In Vas Nox"
+        Circle:           "Lower 2nd Circle of Forgotten spells"
+        DamageType:       "Poison"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Harmful"
+        }
+        ReagentCosts: [{
+            Reagent: "VolcanicAsh"
+            Amount:  1
+        }, {
+            Reagent: "Pumice"
+            Amount:  1
+        }, {
+            Reagent: "DragonsBlood"
+            Amount:  1
+        }, {
+            Reagent: "DeadWood"
+            Amount:  1
+        }]
+    }
+    Levitate: {
+        Type:             "LevitateSpell"
+        Name:             "Levitate"
+        Mantra:           "In Levi"
+        Circle:           "Lower 2nd Circle of Forgotten spells"
+        DamageType:       "None"
+        RightHandEffect:  9002
+        LeftHandEffect:   9002
+        Action:           221
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "None"
+        }
+        ReagentCosts: [{
+            Reagent: "DaemonBone"
+            Amount:  1
+        }, {
+            Reagent: "Brimstone"
+            Amount:  1
+        }, {
+            Reagent: "DragonsBlood"
+            Amount:  1
+        }, {
+            Reagent: "Bloodspawn"
+            Amount:  1
+        }]
+    }
+    SpectralAura: {
+        Type:             "SpectralAuraSpell"
+        Name:             "Spectral Aura"
+        Mantra:           "Vas An Lor Xen"
+        Circle:           "Lower 2nd Circle of Forgotten spells"
+        DamageType:       "None"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        ReagentCosts: [{
+            Reagent: "DaemonBone"
+            Amount:  1
+        }, {
+            Reagent: "Brimstone"
+            Amount:  1
+        }, {
+            Reagent: "Bloodspawn"
+            Amount:  1
+        }]
+    }
+    UndeadBane: {
+        Type:             "UndeadBaneSpell"
+        Name:             "Undead Bane"
+        Mantra:           "Vas An Corp Mani"
+        Circle:           "Lower 2nd Circle of Forgotten spells"
+        DamageType:       "Necro"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Harmful"
+        }
+        ReagentCosts: [{
+            Reagent: "DragonsBlood"
+            Amount:  1
+        }, {
+            Reagent: "SerpentScale"
+            Amount:  1
+        }, {
+            Reagent: "Blackmoor"
+            Amount:  1
+        }, {
+            Reagent: "Bloodspawn"
+            Amount:  1
+        }]
+    }
+    GoliathMutate: {
+        Type:             "GoliathMutateSpell"
+        Name:             "Goliath Mutate"
+        Mantra:           "In Rel Ylem"
+        Circle:           "Higher 2nd Circle of Forgotten spells"
+        DamageType:       "None"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   false
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "Beneficial"
+        }
+        ReagentCosts: [{
+            Reagent: "DaemonBone"
+            Amount:  1
+        }, {
+            Reagent: "ExecutionersCap"
+            Amount:  1
+        }, {
+            Reagent: "VialOfBlood"
+            Amount:  1
+        }, {
+            Reagent: "WyrmsHeart"
+            Amount:  1
+        }]
+    }
+    Invocation: {
+        Type:             "InvocationSpell"
+        Name:             "Invocation"
+        Mantra:           "Kal Vas Xen Corp Ylem"
+        Circle:           "Higher 2nd Circle of Forgotten spells"
+        DamageType:       "None"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           236
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        ReagentCosts: [{
+            Reagent: "DaemonBone"
+            Amount:  1
+        }, {
+            Reagent: "Brimstone"
+            Amount:  1
+        }, {
+            Reagent: "DragonsBlood"
+            Amount:  1
+        }, {
+            Reagent: "VolcanicAsh"
+            Amount:  1
+        }]
+    }
+    Possession: {
+        Type:             "PossessionSpell"
+        Name:             "Possession"
+        Mantra:           "An Corp Grav"
+        Circle:           "Higher 2nd Circle of Forgotten spells"
+        DamageType:       "None"
+        RightHandEffect:  9031
+        LeftHandEffect:   9031
+        Action:           227
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   true
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "None"
+        }
+        ReagentCosts: [{
+            Reagent: "VolcanicAsh"
+            Amount:  1
+        }, {
+            Reagent: "BatWing"
+            Amount:  1
+        }, {
+            Reagent: "DaemonBone"
+            Amount:  1
+        }, {
+            Reagent: "DragonsBlood"
+            Amount:  1
+        }, {
+            Reagent: "Bloodspawn"
+            Amount:  1
+        }, {
+            Reagent: "Pumice"
+            Amount:  1
+        }, {
+            Reagent: "SerpentScale"
+            Amount:  1
+        }]
+    }
+    MagicRune: {
+        Type:             "MagicRuneSpell"
+        Name:             "Magic Rune"
+        Mantra:           "Vas Ort Mani"
+        Circle:           "Higher 2nd Circle of Forgotten spells"
+        DamageType:       "None"
+        RightHandEffect:  9002
+        LeftHandEffect:   9002
+        Action:           221
+        ShowHandMovement: true
+        RevealOnCast:     true
+        Resistable:       true
+        Reflectable:      true
+        ClearHandsOnCast: true
+        BlocksMovement:   false
+        AllowTown:        true
+        AllowDead:        false
+        TargetOptions: {
+            Range:         15
+            AllowGround:   true
+            AllowMultis:   true
+            AllowNonLocal: false
+            CheckLos:      true
+            Flags:         "None"
+        }
+        ReagentCosts: [{
+            Reagent: "EyeOfNewt"
+            Amount:  1
+        }, {
+            Reagent: "VialOfBlood"
+            Amount:  1
+        }, {
+            Reagent: "FertileDirt"
+            Amount:  1
+        }, {
+            Reagent: "PigIron"
+            Amount:  1
+        }]
+    }
 }

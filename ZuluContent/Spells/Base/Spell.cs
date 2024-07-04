@@ -381,7 +381,7 @@ namespace Server.Spells
                 return false;
             }
 
-            if (!ConsumeReagents())
+            if (Caster.Skills[SkillName.Magery].Value >= 70 && !ConsumeReagents())
             {
                 // More reagents are needed for this spell.
                 Caster.LocalOverheadMessage(MessageType.Regular, 0x22, 502630);

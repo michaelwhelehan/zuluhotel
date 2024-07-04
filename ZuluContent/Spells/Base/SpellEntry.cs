@@ -118,6 +118,23 @@ namespace Server.Spells
         EarthSpirit = 612,
         FireSpirit = 613,
         StormSpirit = 614,
-        WaterSpirit = 615
+        WaterSpirit = 615,
+        
+        FireSerpent = 700,
+        ThorsHammer = 701,
+        EnergySphere = 702,
+        ChaoticFlux = 703,
+        WindOfAmnesia = 704,
+        MassAttack = 705,
+        ChantOfLife = 706,
+        ChantOfEnhance = 707,
+        PoisonCloud = 708,
+        Levitate = 709,
+        SpectralAura = 710,
+        UndeadBane = 711,
+        GoliathMutate = 712,
+        Invocation = 713,
+        Possession = 714,
+        MagicRune = 715
     }
 }

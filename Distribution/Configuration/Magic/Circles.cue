@@ -233,6 +233,37 @@ Circles: {
 		Difficulty: 250
 		PointValue: 20000
 		Delay:      2000
-	}]
-
+	}, {
+        Id:              34
+        Name:            "Lower 1st Circle of Forgotten spells"
+        Mana:            40
+        Difficulty:      80
+        PointValue:      600
+        Delay:           2500
+        EffectiveCircle: 10
+    }, {
+        Id:              35
+        Name:            "Higher 1st Circle of Forgotten spells"
+        Mana:            60
+        Difficulty:      100
+        PointValue:      1200
+        Delay:           3000
+        EffectiveCircle: 12
+    }, {
+        Id:              36
+        Name:            "Lower 2nd Circle of Forgotten spells"
+        Mana:            85
+        Difficulty:      120
+        PointValue:      4800
+        Delay:           3500
+        EffectiveCircle: 13
+    }, {
+        Id:              37
+        Name:            "Higher 2nd Circle of Forgotten spells"
+        Mana:            115
+        Difficulty:      140
+        PointValue:      4800
+        Delay:           4000
+        EffectiveCircle: 16
+    }]
 }

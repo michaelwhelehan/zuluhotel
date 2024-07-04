@@ -4,6 +4,7 @@ using Scripts.Zulu.Engines.Classes;
 using Scripts.Zulu.Utilities;
 using Server.Mobiles;
 using Server.Network;
+using Server.Targeting;
 using ZuluContent.Zulu.Engines.Magic;
 
 namespace Server.Items
@@ -37,6 +38,19 @@ namespace Server.Items
             base.Deserialize(reader);
 
             int version = reader.ReadInt();
+        }
+
+        public override void OnDoubleClick(Mobile from)
+        {
+            if (Parent == from)
+            {
+                from.Target = new InternalTarget();
+                from.SendSuccessMessage("Select the creature to taunt.");
+            }
+            else
+            {
+                base.OnDoubleClick(from);
+            }
         }
 
         public override double OnHit(BaseWeapon weapon, double damage)
@@ -73,6 +87,44 @@ namespace Server.Items
             base.OnHit(weapon, damage);
             
             return damage;
+        }
+        
+        private class InternalTarget : Target
+        {
+            public InternalTarget() : base(12, false, TargetFlags.None)
+            {
+            }
+
+            protected override void OnTarget(Mobile from, object targeted)
+            {
+                if (targeted is BaseCreature creature)
+                {
+                    var parrySkillVal = from.Skills[SkillName.Parry].Value;
+                    parrySkillVal *= from.GetClassModifier(SkillName.Swords);
+
+                    if (Utility.RandomMinMax(1, 100) <= (int)(parrySkillVal / 3))
+                    {
+                        if (creature.Combatant != null)
+                        {
+                            creature.Combatant = null;
+                        }
+                        
+                        creature.AggressiveAction(from,false);
+                        
+                        from.Animate(from.Mounted ? 28 : 19, 7, 1, true, false, 0);
+                        from.PlaySound(from.Female ? 0x338 : 0x44A);
+                        from.PublicOverheadMessage(MessageType.Emote, from.EmoteHue, false, $"*taunts {creature.Name}*");
+                    }
+                    else
+                    {
+                        from.SendFailureMessage("You fail to taunt the creature.");
+                    }
+                }
+                else
+                {
+                    from.SendFailureMessage("You must target a creature to taunt.");
+                }
+            }
         }
     }
 }

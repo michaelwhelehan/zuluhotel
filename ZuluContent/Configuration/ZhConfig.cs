@@ -19,6 +19,7 @@ namespace Server
         public static EmailConfiguration Email => _root.Email;
         public static MessagingConfiguration Messaging => _root.Messaging;
         public static ResourceConfiguration Resources => _root.Resources;
+        public static RitualConfiguration Rituals => _root.Rituals;
         public static CraftConfiguration Crafting => _root.Crafting;
         public static LootConfiguration Loot => _root.Loot;
         public static SkillConfiguration Skills => _root.Skills;

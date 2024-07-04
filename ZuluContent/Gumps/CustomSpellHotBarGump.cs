@@ -1,5 +1,6 @@
 ﻿using Scripts.Zulu.Engines.CustomSpellHotBar;
 using Scripts.Zulu.Spells.Earth;
+using Scripts.Zulu.Spells.Forgotten;
 using Scripts.Zulu.Spells.Necromancy;
 using Scripts.Zulu.Utilities;
 using Server.Mobiles;
@@ -26,6 +27,10 @@ namespace Server.Gumps
             else if (hotBar.Book.SpellType == typeof(NecromancerSpell))
             {
                 AddImage(0, 0, 11056);
+            }
+            else if (hotBar.Book.SpellType == typeof(ForgottenSpell))
+            {
+                AddImage(0, 0, 11047);
             }
             
             if (hotBar.Direction == Direction.Right)

@@ -7,7 +7,8 @@ import (
 Types.#SkillSettings
 
 MaxStatCap: 60000
-StatCap:    1300
+StatCap:    1350
+PointsMultiplier: 3
 Entries: {
 	Anatomy: {
 		OnUseHandler:  "Anatomy"

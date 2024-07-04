@@ -62,7 +62,7 @@ namespace Server.Scripts.Engines.Loot
             Type = t;
         }
 
-        public bool Is<T>() => Type.IsSubclassOf(typeof(T));
+        public bool Is<T>() => Type.IsSubclassOf(typeof(T)) || Type == typeof(T);
 
 
         public Item Create(Mobile? killedBy)
@@ -94,6 +94,13 @@ namespace Server.Scripts.Engines.Loot
                     });
                 }
 
+                if (magicItem is BaseEquippableItem equippableItem)
+                {
+                    equippableItem.DexBonus = BonusDex;
+                    equippableItem.StrBonus = BonusStr;
+                    equippableItem.IntBonus = BonusInt;
+                }
+
                 switch (magicItem)
                 {
                     case BaseWeapon weapon:
@@ -117,10 +124,6 @@ namespace Server.Scripts.Engines.Loot
                         weapon.MagicalWeaponType = MagicalWeaponType;
                         break;
                     case BaseArmor armor:
-                        armor.DexBonus = BonusDex;
-                        armor.StrBonus = BonusStr;
-                        armor.IntBonus = BonusInt;
-
                         armor.CreatureProtection = CreatureProtection;
                         armor.ProtectionLevel = ArmorProtectionLevel;
                         armor.Durability = (ArmorDurabilityLevel) DurabilityLevel;
@@ -139,6 +142,9 @@ namespace Server.Scripts.Engines.Loot
                             else if (ProtectionCharges > 0)
                                 jewelry.SetResistCharges(ProtectionType, ProtectionCharges);
                         }
+                        break;
+                    case PowerCombineBeads beads:
+                        beads.ArmorBonusType = ArmorMod;
                         break;
                 }
 
@@ -207,6 +213,11 @@ namespace Server.Scripts.Engines.Loot
         public static bool MakeItemMagical(LootItem item, Container container)
         {
             bool isMagic = false;
+
+            if (item.Is<PowerCombineBeads>())
+            {
+                item.Hue = 1;
+            }
 
             while (item.ItemLevel > 0)
             {
@@ -313,6 +324,21 @@ namespace Server.Scripts.Engines.Loot
 
                     break;
                 }
+                
+                case not null when item.Is<PowerCombineBeads>():
+                {
+                    switch (item.EnchantLevel)
+                    {
+                        case < 2.5:
+                            ApplyMiscSkillMod(item);
+                            break;
+                        default:
+                            ApplyMiscArmorMod(item);
+                            break;
+                    }
+
+                    break;
+                }
 
                 case not null when item.Is<BaseArmor>() && !item.Is<IGMItem>():
                 {
@@ -336,7 +362,8 @@ namespace Server.Scripts.Engines.Loot
                 }
             }
 
-            ApplyCursed(item);
+            if (!item.Is<PowerCombineBeads>())
+                ApplyCursed(item);
 
             return isMagic;
         }
@@ -402,11 +429,11 @@ namespace Server.Scripts.Engines.Loot
 
         private static void ApplyOnHitScript(LootItem item, Container container)
         {
-            var scriptType = RandomMinMax(1, 94) + item.ItemLevel * 2;
+            var scriptType = RandomMinMax(1, 95) + item.ItemLevel * 2;
             
             if (scriptType <= 80)
                 ApplyResistantHitscript(item);
-            else if (scriptType <= 105)
+            else if (scriptType is > 100 and <= 105)
             {
                 item.Deleted = true;
                 var gmArmor = CreateRandomGMArmor();
@@ -417,7 +444,7 @@ namespace Server.Scripts.Engines.Loot
 
         private static void ApplyWeaponHitScript(LootItem item, Container container)
         {
-            var scriptType = RandomMinMax(1, 94) + item.ItemLevel * 2;
+            var scriptType = RandomMinMax(1, 95) + item.ItemLevel * 2;
 
             if (scriptType <= 40)
                 ApplySpellHitscript(item);

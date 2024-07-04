@@ -99,4 +99,20 @@ package Types
 "EarthSpirit" |
 "FireSpirit" |
 "StormSpirit" |
-"WaterSpirit"
+"WaterSpirit" |
+"FireSerpent" |
+"ThorsHammer" |
+"EnergySphere" |
+"ChaoticFlux" |
+"WindOfAmnesia" |
+"MassAttack" |
+"ChantOfLife" |
+"ChantOfEnhance" |
+"PoisonCloud" |
+"Levitate" |
+"SpectralAura" |
+"UndeadBane" |
+"GoliathMutate" |
+"Invocation" |
+"Possession" |
+"Decoy"
